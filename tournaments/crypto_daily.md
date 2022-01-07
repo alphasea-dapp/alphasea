@@ -6,6 +6,7 @@
 
 提出データ例
 
+```text
 symbol,position
 BTC,0.123
 ETH,-0.04
@@ -17,6 +18,7 @@ SOL,0.11
 BNB,-0.21
 MATIC,0.04
 ADA,-0.05
+```
 
 要件
 
@@ -47,6 +49,7 @@ Rebalancing takes place daily from 1:00 (UTC) over an hour with TWAP enforcement
 
 Example of submitted data
 
+```text
 symbol, position
 BTC, 0.123
 ETH, -0.04
@@ -58,6 +61,7 @@ SOL, 0.11
 BNB, -0.21
 MATIC, 0.04
 ADA, -0.05
+```
 
 Requirements
 
