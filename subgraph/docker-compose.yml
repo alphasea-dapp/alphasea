@@ -1,0 +1,32 @@
+# for development
+
+version: "3"
+services:
+  graph:
+    image: graphprotocol/graph-node:v0.24.2
+    depends_on:
+      - ipfs
+      - postgres
+    ports:
+      - 8000:8000
+      - 8001:8001
+      - 8020:8020
+    environment:
+      postgres_host: postgres
+      postgres_user: postgres
+      postgres_pass: password
+      postgres_db: graph
+      ipfs: 'ipfs:5001'
+      ethereum: 'mainnet:http://host.docker.internal:8545'
+      GRAPH_LOG: info
+  ipfs:
+    image: ipfs/go-ipfs:v0.11.0
+    ports:
+      - 5001:5001
+  postgres:
+    image: postgres:14.1
+    command: ["postgres", "-cshared_preload_libraries=pg_stat_statements"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: graph

@@ -1,0 +1,55 @@
+
+type Tournament @entity {
+  id: ID!
+  executionStartAt: BigInt!
+  predictionTime: BigInt!
+  purchaseTime: BigInt!
+  shippingTime: BigInt!
+  executionPreparationTime: BigInt!
+  executionTime: BigInt!
+  publicationTime: BigInt!
+  description: String!
+  createdAt: BigInt!
+}
+
+type Model @entity {
+  id: ID!
+  tournament: Tournament!
+  owner: Bytes!
+  predictionLicense: String!
+  createdAt: BigInt!
+
+  # computed
+  totalEarnings: BigInt!
+  predictionCount: BigInt!
+  publishedPredictionCount: BigInt!
+  purchaseCount: BigInt!
+  shippedPurchaseCount: BigInt!
+  refundedPurchaseCount: BigInt!
+}
+
+type Prediction @entity {
+  id: ID!
+  model: Model!
+  price: BigInt!
+  encryptedContent: Bytes!
+  contentKey: String
+  createdAt: BigInt!
+  updatedAt: BigInt!
+
+  # computed
+  purchaseCount: BigInt!
+  shippedPurchaseCount: BigInt!
+  refundedPurchaseCount: BigInt!
+}
+
+type Purchase @entity {
+  id: ID!
+  purchaser: String!
+  publicKey: String!
+  prediction: Prediction!
+  encryptedContentKey: String
+  refunded: Boolean!
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
