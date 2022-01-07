@@ -1,87 +1,97 @@
 // SPDX-License-Identifier: CC0-1.0
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "hardhat/console.sol";
 
-contract Alphasea is Initializable, ReentrancyGuard {
+contract Alphasea is ReentrancyGuard {
     using SafeMath for uint;
 
-    uint constant modelWeightBits = 8;
     uint constant daySeconds = 24 * 60 * 60;
 
-    struct Tournament {
-        uint executionStartAt;
-        uint predictionTime;
-        uint purchaseTime;
-        uint shippingTime;
-        uint executionPreparationTime;
-        uint executionTime;
-        uint executionCoolDownTime;
-        uint publicationTime;
+    struct TournamentParams {
+        string tournamentId;
+        uint32 executionStartAt;
+        uint32 predictionTime;
+        uint32 purchaseTime;
+        uint32 shippingTime;
+        uint32 executionPreparationTime;
+        uint32 executionTime;
+        uint32 publicationTime;
         string description;
+    }
 
-        mapping(address => uint) sumModelWeights; // key: model owner
-        uint lockedAmount;
-        uint pendingLockedAmount;
-        uint pendingLockCreatedAt;
+    struct Tournament {
+        uint32 executionStartAt;
+        uint32 predictionTime;
+        uint32 purchaseTime;
+        uint32 shippingTime;
+        uint32 executionPreparationTime;
+        uint32 executionTime;
+        uint32 publicationTime;
+        string description;
     }
 
     struct Model {
         address owner;
-        uint weight;
-        uint pendingWeight;
-        uint pendingWeightCreatedAt;
-        bytes32 tournamentId;
-        mapping(uint64 => Prediction) predictions; // key: executionStartAt
-        bytes32 predictionLicense;
+        string tournamentId;
+        string predictionLicense;
+        mapping(uint => Prediction) predictions; // key: executionStartAt
     }
 
+    // PredictionとPurchaseは数が多いので、
+    // contractからreadしないものは、
+    // eventに書き込んでgas代を節約する
+
     struct Prediction {
-        bytes32 modelId;
-        bytes32 contentKey;
-        uint lockedAmountSnapshot;
-        uint price;
-        uint64 executionStartAt;
-        bytes encryptedContent;
+        uint248 price;
+        bool published;
         mapping(address => Purchase) purchases; // key: purchaser
     }
 
     struct Purchase {
-        address purchaser;
-        bytes encryptedContentKey;
+        bool created;
+        bool shipped;
         bool refunded;
     }
 
-    IERC20 private mainToken;
-    mapping(bytes32 => Tournament) private tournaments; // key: tournamentId
-    bytes32[] private tournamentIds;
-    mapping(bytes32 => Model) private models; // key: modelId
-    mapping(address => uint) private balances;
+    event TournamentCreated(string tournamentId,
+        uint executionStartAt,
+        uint predictionTime,
+        uint purchaseTime,
+        uint shippingTime,
+        uint executionPreparationTime,
+        uint executionTime,
+        uint publicationTime,
+        string description);
+    event ModelCreated(string modelId, address owner, string tournamentId, string predictionLicense);
+    event PredictionCreated(string modelId, uint executionStartAt, uint price, bytes encryptedContent);
+    event PredictionPublished(string modelId, uint executionStartAt, bytes32 contentKey);
+    event PurchaseCreated(string modelId, uint executionStartAt, address purchaser, bytes publicKey);
+    event PurchaseShipped(string modelId, uint executionStartAt, address purchaser, bytes encryptedContentKey);
+    event PurchaseRefunded(string modelId, uint executionStartAt, address purchaser);
 
-    modifier onlyModelOwner(bytes32 modelId) {
+    mapping(string => Tournament) public tournaments; // key: tournamentId
+    mapping(string => Model) public models; // key: modelId
+    //    mapping(address => uint) public balances;
+
+    modifier onlyModelOwner(string calldata modelId) {
         require(modelExists(models[modelId]), "modelId not exist.");
         require(models[modelId].owner == msg.sender, "model owner only.");
         _;
     }
 
-    modifier onlyPredictionExists(bytes32 modelId, uint64 executionStartAt) {
+    modifier onlyPredictionExists(string calldata modelId, uint executionStartAt) {
         require(modelExists(models[modelId]), "modelId not exist.");
         require(predictionExists(models[modelId].predictions[executionStartAt]), "prediction not exist.");
         _;
     }
 
-    modifier checkToken(IERC20 token) {
-        require(mainToken == token, "token not allowed.");
-        _;
-    }
-
-    modifier checkPredictionLicense(bytes32 predictionLicense) {
-        require(predictionLicense == "CC0-1.0", "predictionLicense must be CC0-1.0.");
+    modifier checkPredictionLicense(string calldata predictionLicense) {
+        require(strEquals(predictionLicense, "CC0-1.0"), "predictionLicense must be CC0-1.0.");
         _;
     }
 
@@ -90,41 +100,61 @@ contract Alphasea is Initializable, ReentrancyGuard {
         _;
     }
 
-    modifier checkModelWeight(uint weight) {
-        require(weight > 0, "weight zero.");
-        require(weight <= (1 << modelWeightBits), "weight too large.");
-        _;
-    }
+    constructor (TournamentParams[] memory tournaments2) {
+        for (uint i = 0; i < tournaments2.length; i++) {
+            TournamentParams memory t = tournaments2[i];
+            Tournament storage tournament = tournaments[t.tournamentId];
+            tournament.executionStartAt = t.executionStartAt;
+            tournament.predictionTime = t.predictionTime;
+            tournament.purchaseTime = t.purchaseTime;
+            tournament.shippingTime = t.shippingTime;
+            tournament.executionPreparationTime = t.executionPreparationTime;
+            tournament.executionTime = t.executionTime;
+            tournament.publicationTime = t.publicationTime;
+            tournament.description = t.description;
 
-    function initialize(IERC20 mainToken2) public initializer nonReentrant {
-        mainToken = mainToken2;
+            emit TournamentCreated(
+                t.tournamentId,
+                t.executionStartAt,
+                t.predictionTime,
+                t.purchaseTime,
+                t.shippingTime,
+                t.executionPreparationTime,
+                t.executionTime,
+                t.publicationTime,
+                t.description
+            );
+        }
     }
 
     // account operation
 
-    function lockAsset(IERC20 token, uint amount) external nonReentrant checkToken(token) {
-        require(mainToken.balanceOf(msg.sender) >= amount);
-
-        addBalance(amount);
-        transferToThisContract(amount);
-    }
-
-    function withdrawAsset(IERC20 token, uint amount) external nonReentrant checkToken(token) {
-        require(balances[msg.sender] >= amount, "balance < amount.");
-
-        for (uint i = 0; i < tournamentIds.length; i++) {
-            Tournament storage tournament = tournaments[tournamentIds[i]];
-            processPendingLock(tournament, false, amount);
-        }
-
-        balances[msg.sender] = balances[msg.sender].sub(amount);
-        transferToUntrustedSender(amount);
-    }
+    //    function withdraw() external nonReentrant {
+    //        require(balances[msg.sender] > 0, "balance == 0.");
+    //
+    //        uint amount = balances[msg.sender];
+    //        balances[msg.sender] = 0;
+    //        payable(msg.sender).transfer(amount);
+    //    }
 
     // model operation
 
-    function createModel(bytes32 modelId, bytes32 tournamentId, uint weight, bytes32 predictionLicense) nonReentrant
-        external checkModelWeight(weight) checkPredictionLicense(predictionLicense) {
+    struct CreateModelParam {
+        string modelId;
+        string tournamentId;
+        string predictionLicense;
+    }
+
+    function createModels(CreateModelParam[] calldata params)
+    external nonReentrant {
+
+        for (uint i = 0; i < params.length; i++) {
+            createModel(params[i].modelId, params[i].tournamentId, params[i].predictionLicense);
+        }
+    }
+
+    function createModel(string calldata modelId, string calldata tournamentId, string calldata predictionLicense)
+    private checkPredictionLicense(predictionLicense) {
 
         require(isValidModelId(modelId), "invalid modelId");
 
@@ -138,113 +168,204 @@ contract Alphasea is Initializable, ReentrancyGuard {
         model.tournamentId = tournamentId;
         model.predictionLicense = predictionLicense;
 
-        processPendingModelWeight(model, tournament, true, weight);
-    }
-
-    function setModelWeight(bytes32 modelId, uint weight) nonReentrant
-        external onlyModelOwner(modelId) checkModelWeight(weight) {
-
-        Model storage model = models[modelId];
-        Tournament storage tournament = tournaments[model.tournamentId];
-        processPendingModelWeight(model, tournament, true, weight);
+        emit ModelCreated(modelId, msg.sender, tournamentId, predictionLicense);
     }
 
     // model prediction operation
 
-    function createPrediction(bytes32 modelId, uint64 executionStartAt,
-        bytes memory encryptedContent, uint price)
-        external nonReentrant checkPrice(price) onlyModelOwner(modelId) {
+    struct CreatePredictionParam {
+        string modelId;
+        uint executionStartAt;
+        bytes encryptedContent;
+        uint price;
+    }
+
+    function createPredictions(CreatePredictionParam[] calldata params)
+    external nonReentrant {
+
+        for (uint i = 0; i < params.length; i++) {
+            createPrediction(params[i].modelId, params[i].executionStartAt,
+                params[i].encryptedContent, params[i].price);
+        }
+    }
+
+    function createPrediction(string calldata modelId, uint executionStartAt,
+        bytes calldata encryptedContent, uint price)
+    private checkPrice(price) onlyModelOwner(modelId) {
 
         Model storage model = models[modelId];
         Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimePredictable(tournament, executionStartAt, block.timestamp));
+        require(isValidExecutionStartAt(tournament, executionStartAt), "executionStartAt is invalid");
+        require(isTimePredictable(tournament, executionStartAt, getTimestamp()), "createPrediction is forbidden now");
 
         Prediction storage prediction = model.predictions[executionStartAt];
         require(!predictionExists(prediction), "prediction already exists.");
 
-        processPendingLock(tournament, false, 0);
-        processPendingModelWeight(model, tournament, false, 0);
+        require(price <= type(uint248).max);
+        prediction.price = uint248(price);
 
-        prediction.modelId = modelId;
-        prediction.executionStartAt = executionStartAt;
-        uint sumWeights = tournament.sumModelWeights[msg.sender];
-        if (sumWeights == 0) {
-            prediction.lockedAmountSnapshot = 0;
-        } else {
-            // prevent overflow
-            uint x = tournament.lockedAmount;
-            x = Math.min(x, (1 << (256 - modelWeightBits)) - 1);
-            prediction.lockedAmountSnapshot = x.mul(model.weight).div(sumWeights);
-        }
-        prediction.encryptedContent = encryptedContent;
-        prediction.price = price;
+        emit PredictionCreated(modelId, executionStartAt, price, encryptedContent);
     }
 
-    function purchasePrediction(bytes32 modelId, uint64 executionStartAt)
-        external nonReentrant onlyPredictionExists(modelId, executionStartAt) {
+    struct PublishPredictionParam {
+        string modelId;
+        uint executionStartAt;
+        bytes contentKeyGenerator;
+    }
+
+    function publishPredictions(PublishPredictionParam[] calldata params)
+    external nonReentrant {
+
+        for (uint i = 0; i < params.length; i++) {
+            publishPrediction(params[i].modelId, params[i].executionStartAt,
+                params[i].contentKeyGenerator);
+        }
+    }
+
+    function publishPrediction(string calldata modelId, uint executionStartAt, bytes calldata contentKeyGenerator)
+    private onlyModelOwner(modelId) onlyPredictionExists(modelId, executionStartAt) {
+
+        require(contentKeyGenerator.length > 0, "contentKeyGenerator empty");
 
         Model storage model = models[modelId];
         Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimePurchasable(tournament, executionStartAt, block.timestamp));
+        require(isTimePublishable(tournament, executionStartAt, getTimestamp()), "publishPrediction is forbidden now");
+
+        Prediction storage prediction = model.predictions[executionStartAt];
+        require(!prediction.published, "Already published.");
+
+        bytes32 contentKey = keccak256(abi.encodePacked(contentKeyGenerator, modelId));
+
+        prediction.published = true;
+
+        emit PredictionPublished(modelId, executionStartAt, contentKey);
+    }
+
+    struct CreatePurchaseParam {
+        string modelId;
+        uint executionStartAt;
+        bytes publicKey;
+    }
+
+    function createPurchases(CreatePurchaseParam[] calldata params)
+    external payable nonReentrant {
+
+        uint sumPrice = 0;
+        for (uint i = 0; i < params.length; i++) {
+            uint price = createPurchase(params[i].modelId, params[i].executionStartAt,
+                params[i].publicKey);
+            sumPrice = sumPrice.add(price);
+        }
+
+        require(msg.value >= sumPrice, "Not enough ETH sent.");
+
+        // refund exceeded
+        payable(msg.sender).transfer(msg.value.sub(sumPrice));
+        //        addBalance(msg.value.sub(sumPrice));
+    }
+
+    function createPurchase(string calldata modelId, uint executionStartAt, bytes calldata publicKey)
+    private onlyPredictionExists(modelId, executionStartAt) returns (uint) {
+
+        require(publicKey.length > 0, "publicKey empty");
+
+        Model storage model = models[modelId];
+        require(model.owner != msg.sender, "cannot purchase my models.");
+        Tournament storage tournament = tournaments[model.tournamentId];
+        require(isTimePurchasable(tournament, executionStartAt, getTimestamp()));
 
         Prediction storage prediction = models[modelId].predictions[executionStartAt];
         Purchase storage purchase = prediction.purchases[msg.sender];
         require(!purchaseExists(purchase), "Already purchased.");
 
-        require(mainToken.balanceOf(msg.sender) >= prediction.price);
+        purchase.created = true;
 
-        purchase.purchaser = msg.sender;
+        emit PurchaseCreated(modelId, executionStartAt, msg.sender, publicKey);
 
-        transferToThisContract(prediction.price);
+        return prediction.price;
     }
 
-    function shipPrediction(bytes32 modelId, uint64 executionStartAt, address purchaser, bytes memory encryptedContentKey)
-        external nonReentrant onlyModelOwner(modelId) onlyPredictionExists(modelId, executionStartAt) {
+    struct ShipPurchaseParam {
+        string modelId;
+        uint executionStartAt;
+        address purchaser;
+        bytes encryptedContentKey;
+    }
+
+    function shipPurchases(ShipPurchaseParam[] calldata params)
+    external nonReentrant {
+
+        uint sumPrice = 0;
+        for (uint i = 0; i < params.length; i++) {
+            uint price = shipPurchase(params[i].modelId, params[i].executionStartAt,
+                params[i].purchaser, params[i].encryptedContentKey);
+            sumPrice = sumPrice.add(price);
+        }
+
+        payable(msg.sender).transfer(sumPrice);
+        //        addBalance(sumPrice);
+    }
+
+    function shipPurchase(string calldata modelId, uint executionStartAt, address purchaser, bytes calldata encryptedContentKey)
+    private onlyModelOwner(modelId) onlyPredictionExists(modelId, executionStartAt) returns (uint) {
 
         require(encryptedContentKey.length > 0, "encryptedContentKey empty.");
 
         Model storage model = models[modelId];
-        Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimeShippable(tournament, executionStartAt, block.timestamp));
+        {
+            Tournament storage tournament = tournaments[model.tournamentId];
+            require(isTimeShippable(tournament, executionStartAt, getTimestamp()));
+        }
 
         Prediction storage prediction = model.predictions[executionStartAt];
-        Purchase storage purchase = prediction.purchases[purchaser];
-        require(purchaseExists(purchase), "Purchase not found.");
-        require(purchase.encryptedContentKey.length > 0, "Already shipped.");
+        {
+            Purchase storage purchase = prediction.purchases[purchaser];
+            require(purchaseExists(purchase), "Purchase not found.");
+            require(!purchase.shipped, "Already shipped.");
+            purchase.shipped = true;
+        }
 
-        purchase.encryptedContentKey = encryptedContentKey;
+        emit PurchaseShipped(modelId, executionStartAt, purchaser, encryptedContentKey);
 
-        addBalance(prediction.price);
+        return prediction.price;
     }
 
-    function publishPrediction(bytes32 modelId, uint64 executionStartAt, bytes32 contentKey)
-        external nonReentrant onlyModelOwner(modelId) onlyPredictionExists(modelId, executionStartAt) {
+    struct RefundPurchaseParam {
+        string modelId;
+        uint executionStartAt;
+    }
+
+    function refundPurchases(RefundPurchaseParam[] calldata params)
+    external nonReentrant {
+
+        uint sumPrice = 0;
+        for (uint i = 0; i < params.length; i++) {
+            uint price = refundPurchase(params[i].modelId, params[i].executionStartAt);
+            sumPrice = sumPrice.add(price);
+        }
+
+        payable(msg.sender).transfer(sumPrice);
+        //        addBalance(sumPrice);
+    }
+
+    function refundPurchase(string calldata modelId, uint executionStartAt)
+    private onlyPredictionExists(modelId, executionStartAt) returns (uint) {
 
         Model storage model = models[modelId];
         Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimePublishable(tournament, executionStartAt, block.timestamp));
-
-        Prediction storage prediction = model.predictions[executionStartAt];
-        require(prediction.contentKey.length > 0, "Already published.");
-
-        prediction.contentKey = contentKey;
-    }
-
-    function refundPrediction(bytes32 modelId, uint64 executionStartAt)
-        external nonReentrant onlyPredictionExists(modelId, executionStartAt) {
-
-        Model storage model = models[modelId];
-        Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimeRefundable(tournament, executionStartAt, block.timestamp));
+        require(isTimeRefundable(tournament, executionStartAt, getTimestamp()));
 
         Prediction storage prediction = model.predictions[executionStartAt];
         Purchase storage purchase = prediction.purchases[msg.sender];
         require(purchaseExists(purchase), "Purchase not found.");
-        require(purchase.encryptedContentKey.length == 0, "Already shipped.");
+        require(!purchase.shipped, "Already shipped.");
         require(!purchase.refunded, "Already refunded.");
 
         purchase.refunded = true;
-        addBalance(prediction.price);
+
+        emit PurchaseRefunded(modelId, executionStartAt, msg.sender);
+
+        return prediction.price;
     }
 
     // private
@@ -258,35 +379,17 @@ contract Alphasea is Initializable, ReentrancyGuard {
     }
 
     function predictionExists(Prediction storage prediction) private view returns (bool) {
-        return prediction.modelId != 0;
+        return prediction.price > 0;
     }
 
     function purchaseExists(Purchase storage purchase) private view returns (bool) {
-        return purchase.purchaser != address(0);
-    }
-
-    function transferToThisContract(uint amount) private {
-        uint256 allowance = mainToken.allowance(msg.sender, address(this));
-        require(allowance >= amount, "allowance < amount");
-        mainToken.transferFrom(msg.sender, address(this), amount);
-    }
-
-    function transferToUntrustedSender(uint amount) private {
-        mainToken.transfer(msg.sender, amount);
+        return purchase.created;
     }
 
     // timeline
 
-    function isTimeWeightChangeable(Tournament storage tournament, uint time) private view returns (bool) {
-        uint startAt = (tournament.executionStartAt + daySeconds).sub(tournament.executionPreparationTime)
-            .sub(tournament.shippingTime).sub(tournament.purchaseTime).sub(tournament.predictionTime);
-        return (time - startAt).mod(daySeconds) < tournament.predictionTime;
-    }
-
-    function isTime(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {
-        uint endAt = executionStartAt.sub(tournament.executionPreparationTime).sub(tournament.shippingTime).sub(tournament.purchaseTime);
-        uint startAt = endAt.sub(tournament.predictionTime);
-        return startAt <= time && time < endAt;
+    function isValidExecutionStartAt(Tournament storage tournament, uint executionStartAt) private view returns (bool) {
+        return executionStartAt.mod(daySeconds) == tournament.executionStartAt;
     }
 
     function isTimePredictable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {
@@ -313,92 +416,39 @@ contract Alphasea is Initializable, ReentrancyGuard {
     }
 
     function isTimePublishable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {
-        uint startAt = executionStartAt.add(tournament.executionTime).add(tournament.executionCoolDownTime);
+        uint startAt = executionStartAt.add(tournament.executionTime);
         uint endAt = startAt.add(tournament.publicationTime);
         return startAt <= time && time < endAt;
     }
 
     // pending requests
 
-    function processPendingModelWeight(Model storage model, Tournament storage tournament, bool setWeight, uint weight) private {
-        if (model.pendingWeightCreatedAt > 0 && isTimeWeightChangeable(tournament, model.pendingWeightCreatedAt)) {
-            model.weight = model.pendingWeight;
-            model.pendingWeightCreatedAt = 0;
-        }
-
-        if (!setWeight) return;
-
-        if (isTimeWeightChangeable(tournament, block.timestamp)) {
-            int weightDiff = int(weight) - int(model.weight);
-            model.weight = weight;
-            if (weightDiff > 0) {
-                tournament.sumModelWeights[msg.sender] = tournament.sumModelWeights[msg.sender].add(uint(weightDiff));
-            } else {
-                tournament.sumModelWeights[msg.sender] = tournament.sumModelWeights[msg.sender].sub(uint(-weightDiff));
-            }
-        } else {
-            model.pendingWeight = weight;
-            model.pendingWeightCreatedAt = block.timestamp;
-        }
-    }
-
-    function processPendingLock(Tournament storage tournament, bool isLock, uint amount) private {
-        if (tournament.pendingLockCreatedAt > 0 && isTimeWeightChangeable(tournament, tournament.pendingLockCreatedAt)) {
-            tournament.lockedAmount = tournament.pendingLockedAmount;
-            tournament.pendingLockCreatedAt = 0;
-        }
-
-        if (amount == 0) return;
-
-        if (isTimeWeightChangeable(tournament, block.timestamp)) {
-            if (isLock) {
-                tournament.lockedAmount = tournament.lockedAmount.add(amount);
-            } else {
-                tournament.lockedAmount = tournament.lockedAmount.sub(amount);
-            }
-            tournament.pendingLockedAmount = tournament.lockedAmount;
-        } else {
-            if (isLock) {
-                tournament.pendingLockedAmount = tournament.pendingLockedAmount.add(amount);
-            } else {
-                tournament.pendingLockedAmount = tournament.pendingLockedAmount.sub(amount);
-            }
-            tournament.pendingLockCreatedAt = block.timestamp;
-        }
-    }
-
-    function addBalance(uint amount) private {
-        for (uint i = 0; i < tournamentIds.length; i++) {
-            Tournament storage tournament = tournaments[tournamentIds[i]];
-            processPendingLock(tournament, true, amount);
-        }
-        balances[msg.sender] = balances[msg.sender].add(amount);
-    }
+    //    function addBalance(uint amount) private {
+    //        balances[msg.sender] = balances[msg.sender].add(amount);
+    //    }
 
     // strings
 
-    function isValidModelId(bytes32 y) private pure returns (bool) {
-        bool terminated = false;
-        for (uint i = 0; i < 32; i++) {
-            uint8 x = uint8(y[i]);
+    function isValidModelId(string memory y) private pure returns (bool) {
+        bytes memory z = bytes(y);
 
-            if (terminated) {
-                if (x != 0) return false;
-                continue;
-            }
+        if (z.length < 4 || z.length > 31) return false;
 
-            if (x == 0) {
-                if (i == 0) return false;
-                terminated = true;
-                continue;
-            }
+        // c識別子
+        uint8 x = uint8(z[0]);
+        if (!isAlpha(x) && !isUnderscore(x)) {
+            return false;
+        }
 
-            if (!isNum(x) && !isAlpha(x) && !isHyphen(x) && !isUnderscore(x)) {
+        for (uint i = 1; i < z.length; i++) {
+            x = uint8(z[i]);
+
+            if (!isNum(x) && !isAlpha(x) && !isUnderscore(x)) {
                 return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     function isNum(uint8 x) private pure returns (bool) {
@@ -409,11 +459,15 @@ contract Alphasea is Initializable, ReentrancyGuard {
         return (0x41 <= x && x <= 0x5a) || (0x61 <= x && x <= 0x7a);
     }
 
-    function isHyphen(uint8 x) private pure returns (bool) {
-        return x == 0x2d;
-    }
-
     function isUnderscore(uint8 x) private pure returns (bool) {
         return x == 0x5f;
+    }
+
+    function strEquals(string memory x, string memory y) private pure returns (bool) {
+        return keccak256(abi.encodePacked(x)) == keccak256(abi.encodePacked(y));
+    }
+
+    function getTimestamp() private view returns (uint) {
+        return block.timestamp;
     }
 }
