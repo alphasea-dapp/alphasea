@@ -21,4 +21,10 @@ module.exports = {
   optimizer: {
     enabled: true
   },
+  networks: {
+    ropsten: {
+      url: `http://127.0.0.1:18545`,
+      accounts: [`${process.env.ROPSTEN_PRIVATE_KEY}`]
+    }
+  }
 };

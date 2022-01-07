@@ -1,0 +1,9 @@
+# for development
+
+version: "3"
+services:
+  eth_node:
+    image: ethereum/client-go
+    ports:
+      - 18545:8545
+    command: ['--ropsten', '--syncmode', 'light', '--http', '--http.addr', '0.0.0.0']
