@@ -16,15 +16,20 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-module.exports = {
+
+const config = {
   solidity: "0.8.4",
   optimizer: {
     enabled: true
   },
-  networks: {
-    ropsten: {
-      url: `http://127.0.0.1:18545`,
-      accounts: [`${process.env.ROPSTEN_PRIVATE_KEY}`]
-    }
+  networks: {}
+}
+
+if (process.env.ROPSTEN_PRIVATE_KEY) {
+  config.networks.ropsten = {
+    url: `http://127.0.0.1:18545`,
+    accounts: [`${process.env.ROPSTEN_PRIVATE_KEY}`]
   }
-};
+}
+
+module.exports = config
