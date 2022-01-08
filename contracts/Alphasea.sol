@@ -272,7 +272,7 @@ contract Alphasea is ReentrancyGuard {
         Model storage model = models[modelId];
         require(model.owner != msg.sender, "cannot purchase my models.");
         Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimePurchasable(tournament, executionStartAt, getTimestamp()));
+        require(isTimePurchasable(tournament, executionStartAt, getTimestamp()), "createPurchase is forbidden now");
 
         Prediction storage prediction = models[modelId].predictions[executionStartAt];
         Purchase storage purchase = prediction.purchases[msg.sender];
@@ -314,7 +314,7 @@ contract Alphasea is ReentrancyGuard {
         Model storage model = models[modelId];
         {
             Tournament storage tournament = tournaments[model.tournamentId];
-            require(isTimeShippable(tournament, executionStartAt, getTimestamp()));
+            require(isTimeShippable(tournament, executionStartAt, getTimestamp()), "shipPurchase is forbidden now");
         }
 
         Prediction storage prediction = model.predictions[executionStartAt];
@@ -353,7 +353,7 @@ contract Alphasea is ReentrancyGuard {
 
         Model storage model = models[modelId];
         Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimeRefundable(tournament, executionStartAt, getTimestamp()));
+        require(isTimeRefundable(tournament, executionStartAt, getTimestamp()), "refundPurchase is forbidden now");
 
         Prediction storage prediction = model.predictions[executionStartAt];
         Purchase storage purchase = prediction.purchases[msg.sender];
