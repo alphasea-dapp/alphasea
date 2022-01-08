@@ -86,3 +86,9 @@ cd subgraph
 npx graph auth --product hosted-service $THEGRAPH_COM_ACCESS_TOKEN
 npm run deploy-ropsten
 ```
+
+### CI
+
+github actionsでビルドを行っている。
+
+設定: .github/workflows/build.yml
