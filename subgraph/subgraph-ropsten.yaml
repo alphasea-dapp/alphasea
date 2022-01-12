@@ -6,7 +6,7 @@ dataSources:
     name: Alphasea
     network: ropsten
     source:
-      address: "0x95174ba4dfD7FA2f1cB3A0421e05f88586534A29"
+      address: "0xf485d7478cCeA7ff7FDbE78957E73216CADBaC60"
       abi: Alphasea
     mapping:
       kind: ethereum/events

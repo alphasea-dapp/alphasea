@@ -83,9 +83,16 @@ subgraph/subgraph-ropsten.yaml内のdataSources[0].source.addressを、
 
 ```bash
 cd subgraph
+npm run codegen
 npx graph auth --product hosted-service $THEGRAPH_COM_ACCESS_TOKEN
 npm run deploy-ropsten
 ```
+
+https://thegraph.com/hosted-service/subgraph/richmanbtc/alphasea-ropsten
+
+以下のALPHASEA_CONTRACT_ADDRESSを書き換える
+
+https://github.com/alphasea-dapp/alphasea-agent/blob/master/docker-compose-ropsten.yml
 
 ### CI
 
