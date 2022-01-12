@@ -90,7 +90,8 @@ npm run deploy-ropsten
 
 https://thegraph.com/hosted-service/subgraph/richmanbtc/alphasea-ropsten
 
-以下のALPHASEA_CONTRACT_ADDRESSを書き換える
+以下のALPHASEA_CONTRACT_ADDRESSとALPHASEA_CONTRACT_ABIを書き換える。
+ALPHASEA_CONTRACT_ABIは npm run print_abi で取得できる。
 
 https://github.com/alphasea-dapp/alphasea-agent/blob/master/docker-compose-ropsten.yml
 
