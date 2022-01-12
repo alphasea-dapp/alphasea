@@ -8,6 +8,7 @@ dataSources:
     source:
       address: "0xf485d7478cCeA7ff7FDbE78957E73216CADBaC60"
       abi: Alphasea
+      startBlock: 11801240
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
