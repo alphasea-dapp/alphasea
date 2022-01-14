@@ -10,7 +10,7 @@ import "hardhat/console.sol";
 contract Alphasea is ReentrancyGuard {
     using SafeMath for uint;
 
-    uint constant daySeconds = 24 * 60 * 60;
+    uint constant DAY_SECONDS = 24 * 60 * 60;
 
     struct TournamentParams {
         string tournamentId;
@@ -389,7 +389,7 @@ contract Alphasea is ReentrancyGuard {
     // timeline
 
     function isValidExecutionStartAt(Tournament storage tournament, uint executionStartAt) private view returns (bool) {
-        return executionStartAt.mod(daySeconds) == tournament.executionStartAt;
+        return executionStartAt.mod(DAY_SECONDS) == tournament.executionStartAt;
     }
 
     function isTimePredictable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {

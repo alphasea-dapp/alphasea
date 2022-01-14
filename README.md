@@ -23,7 +23,7 @@ npx hardhat help
 
 ローカルeth起動
 ```bash
-npx hardhat node
+npx hardhat node --hostname 0.0.0.0
 ```
 
 コントラクトデプロイ
@@ -94,6 +94,10 @@ https://thegraph.com/hosted-service/subgraph/richmanbtc/alphasea-ropsten
 ALPHASEA_CONTRACT_ABIは npm run print_abi で取得できる。
 
 https://github.com/alphasea-dapp/alphasea-agent/blob/master/docker-compose-ropsten.yml
+
+### security check
+
+docker run -it -v $(pwd)/:/alphasea:ro trailofbits/eth-security-toolbox
 
 ### CI
 
