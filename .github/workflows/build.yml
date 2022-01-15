@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         node-version: [12.x, 14.x, 16.x]
-    
+
     steps:
     - uses: actions/checkout@v2
 
@@ -26,6 +26,10 @@ jobs:
       run: |
         yarn install
         npx hardhat compile
+
+    - name: Test
+      run: |
+        npx hardhat test
 
     - name: Build subgraph
       run: |

@@ -1,19 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-
-const tournaments = [
-  {
-    'tournamentId': 'crypto_daily',
-    'executionStartAt': 60 * 60,
-    'predictionTime': 15 * 60,
-    'purchaseTime': 15 * 60,
-    'shippingTime': 15 * 60,
-    'executionPreparationTime': 15 * 60,
-    'executionTime': 60 * 60,
-    'publicationTime': 15 * 60,
-    'description': 'description1',
-  }
-];
+const { defaultTournaments } = require('./helper')
 
 describe("createModels", function () {
   before(async function () {
@@ -21,8 +8,7 @@ describe("createModels", function () {
   });
 
   beforeEach(async function () {
-    await ethers.provider.send("hardhat_reset")
-    this.alphasea = await this.Alphasea.deploy(tournaments);
+    this.alphasea = await this.Alphasea.deploy(defaultTournaments);
     await this.alphasea.deployed();
   });
 
@@ -38,6 +24,15 @@ describe("createModels", function () {
       predictionLicense: 'CC0-1.0'
     }]))
         .to.be.revertedWith('tournament_id not exists.');
+  });
+
+  it("license not supported", async function () {
+    await expect(this.alphasea.createModels([{
+      modelId: 'model1',
+      tournamentId: 'crypto_daily',
+      predictionLicense: 'MIT'
+    }]))
+        .to.be.revertedWith('predictionLicense must be CC0-1.0.');
   });
 
   it("ok", async function () {

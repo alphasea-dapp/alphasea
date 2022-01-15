@@ -97,6 +97,7 @@ contract Alphasea is ReentrancyGuard {
 
     modifier checkPrice(uint price) {
         require(price > 0, "price must be positive.");
+        require(price <= type(uint248).max, "price must be < 2^248");
         _;
     }
 
@@ -203,7 +204,6 @@ contract Alphasea is ReentrancyGuard {
         Prediction storage prediction = model.predictions[executionStartAt];
         require(!predictionExists(prediction), "prediction already exists.");
 
-        require(price <= type(uint248).max);
         prediction.price = uint248(price);
 
         emit PredictionCreated(modelId, executionStartAt, price, encryptedContent);
