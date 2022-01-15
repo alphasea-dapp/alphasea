@@ -147,6 +147,7 @@ contract Alphasea is ReentrancyGuard {
 
     function createModels(CreateModelParam[] calldata params)
     external nonReentrant {
+        require(params.length > 0, "empty params");
 
         for (uint i = 0; i < params.length; i++) {
             createModel(params[i].modelId, params[i].tournamentId, params[i].predictionLicense);
@@ -182,6 +183,7 @@ contract Alphasea is ReentrancyGuard {
 
     function createPredictions(CreatePredictionParam[] calldata params)
     external nonReentrant {
+        require(params.length > 0, "empty params");
 
         for (uint i = 0; i < params.length; i++) {
             createPrediction(params[i].modelId, params[i].executionStartAt,
@@ -215,6 +217,7 @@ contract Alphasea is ReentrancyGuard {
 
     function publishPredictions(PublishPredictionParam[] calldata params)
     external nonReentrant {
+        require(params.length > 0, "empty params");
 
         for (uint i = 0; i < params.length; i++) {
             publishPrediction(params[i].modelId, params[i].executionStartAt,
@@ -249,6 +252,7 @@ contract Alphasea is ReentrancyGuard {
 
     function createPurchases(CreatePurchaseParam[] calldata params)
     external payable nonReentrant {
+        require(params.length > 0, "empty params");
 
         uint sumPrice = 0;
         for (uint i = 0; i < params.length; i++) {
@@ -294,6 +298,7 @@ contract Alphasea is ReentrancyGuard {
 
     function shipPurchases(ShipPurchaseParam[] calldata params)
     external nonReentrant {
+        require(params.length > 0, "empty params");
 
         uint sumPrice = 0;
         for (uint i = 0; i < params.length; i++) {
@@ -337,6 +342,7 @@ contract Alphasea is ReentrancyGuard {
 
     function refundPurchases(RefundPurchaseParam[] calldata params)
     external nonReentrant {
+        require(params.length > 0, "empty params");
 
         uint sumPrice = 0;
         for (uint i = 0; i < params.length; i++) {

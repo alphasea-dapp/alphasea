@@ -99,6 +99,8 @@ https://github.com/alphasea-dapp/alphasea-agent/blob/master/docker-compose-ropst
 
 docker run -it -v $(pwd)/:/alphasea:ro trailofbits/eth-security-toolbox
 
+docker run -it -v $(pwd)/:/alphasea:ro mythril/myth
+
 ### CI
 
 github actionsでビルドを行っている。
