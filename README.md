@@ -31,6 +31,11 @@ npx hardhat node --hostname 0.0.0.0
 npx hardhat run --network localhost scripts/deploy.js
 ```
 
+### test
+
+```bash
+npx hardhat coverage
+```
 
 ### thegraph
 
