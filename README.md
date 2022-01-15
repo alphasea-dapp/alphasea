@@ -78,6 +78,8 @@ set ROPSTEN_PRIVATE_KEY env var
 deploy contract to ropsten 
 
 ```bash
+npx hardhat clean
+npx hardhat compile
 npx hardhat run --network ropsten scripts/deploy.js
 ```
 

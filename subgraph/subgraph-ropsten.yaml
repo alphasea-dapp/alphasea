@@ -6,7 +6,7 @@ dataSources:
     name: Alphasea
     network: ropsten
     source:
-      address: "0xf485d7478cCeA7ff7FDbE78957E73216CADBaC60"
+      address: "0xdf9b68cf2630FA451EE6C17A4a6Ec83F8B7431A0"
       abi: Alphasea
       startBlock: 11801240
     mapping:
