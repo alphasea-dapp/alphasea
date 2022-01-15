@@ -19,7 +19,7 @@ module.exports = {
     defaultTournaments: defaultTournaments,
 }
 
-// cannot use hardhat_reset to use solidity-coverage
+// use snapshot instead of hardhat_reset because of solidity-coverage
 // https://issueexplorer.com/issue/sc-forks/solidity-coverage/574
 
 let snapshotId

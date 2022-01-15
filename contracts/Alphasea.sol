@@ -196,6 +196,8 @@ contract Alphasea is ReentrancyGuard {
         bytes calldata encryptedContent, uint price)
     private checkPrice(price) onlyModelOwner(modelId) {
 
+        require(encryptedContent.length > 0, "encryptedContent empty");
+
         Model storage model = models[modelId];
         Tournament storage tournament = tournaments[model.tournamentId];
         require(isValidExecutionStartAt(tournament, executionStartAt), "executionStartAt is invalid");

@@ -25,6 +25,10 @@ describe("predictions", function () {
       modelId: 'model2',
       tournamentId: 'crypto_daily',
       predictionLicense: 'CC0-1.0'
+    },{
+      modelId: 'model3',
+      tournamentId: 'crypto_daily',
+      predictionLicense: 'CC0-1.0'
     }])).wait()
 
     await (await this.alphasea.connect(this.otherAddress).createModels([{
@@ -38,7 +42,6 @@ describe("predictions", function () {
     this.predictionStartAt = this.executionStartAt - 4 * 15 * 60
 
     await ethers.provider.send("evm_setNextBlockTimestamp", [this.predictionStartAt])
-    await ethers.provider.send("evm_mine")
   });
 
   describe("createPredictions", function () {
@@ -87,13 +90,23 @@ describe("predictions", function () {
           .to.be.revertedWith('price must be < 2^248');
     });
 
+    it("empty encryptedContent", async function () {
+      await expect(this.alphasea.createPredictions([{
+        modelId: 'model1',
+        executionStartAt: this.executionStartAt,
+        encryptedContent: [],
+        price: 1,
+      }]))
+          .to.be.revertedWith('encryptedContent empty');
+    })
+
     it("too early", async function () {
       await ethers.provider.send("evm_setNextBlockTimestamp",
-          [this.predictionStartAt + daySeconds - 1])
+          [this.predictionStartAt - 1])
 
       await expect(this.alphasea.createPredictions([{
         modelId: 'model1',
-        executionStartAt: this.executionStartAt + daySeconds,
+        executionStartAt: this.executionStartAt,
         encryptedContent: [1, 2, 3],
         price: 1,
       }]))
@@ -166,6 +179,134 @@ describe("predictions", function () {
               '0x040506',
           );
     });
-
   });
+
+  describe("publishPredictions", function () {
+    beforeEach(async function () {
+      await (await this.alphasea.createPredictions([{
+        modelId: 'model1',
+        executionStartAt: this.executionStartAt,
+        encryptedContent: [1, 2, 3],
+        price: 1,
+      },{
+        modelId: 'model2',
+        executionStartAt: this.executionStartAt,
+        encryptedContent: [4, 5, 6],
+        price: 2,
+      }])).wait()
+
+      this.publicationStartAt = this.executionStartAt + 60 * 60
+
+      await ethers.provider.send("evm_setNextBlockTimestamp", [this.publicationStartAt])
+    })
+
+    it("empty", async function () {
+      await expect(this.alphasea.publishPredictions([]))
+          .to.be.revertedWith('empty params');
+    });
+
+    it("model not exist", async function () {
+      await expect(this.alphasea.publishPredictions([{
+        modelId: 'not_found',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [1, 2, 3],
+      }]))
+          .to.be.revertedWith('modelId not exist.');
+    })
+
+    it("not model owner", async function () {
+      await expect(this.alphasea.publishPredictions([{
+        modelId: 'other_model1',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [1, 2, 3],
+      }]))
+          .to.be.revertedWith('model owner only.');
+    })
+
+    it("empty contentKeyGenerator", async function () {
+      await expect(this.alphasea.publishPredictions([{
+        modelId: 'model1',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [],
+      }]))
+          .to.be.revertedWith('contentKeyGenerator empty');
+    })
+
+    it("too early", async function () {
+      await ethers.provider.send("evm_setNextBlockTimestamp",
+          [this.publicationStartAt - 1])
+
+      await expect(this.alphasea.publishPredictions([{
+        modelId: 'model1',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [1, 2, 3],
+      }]))
+          .to.be.revertedWith('publishPrediction is forbidden now');
+    })
+
+    it("too late", async function () {
+      await ethers.provider.send("evm_setNextBlockTimestamp", [this.publicationStartAt + 15 * 60])
+
+      await expect(this.alphasea.publishPredictions([{
+        modelId: 'model1',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [1, 2, 3],
+      }]))
+          .to.be.revertedWith('publishPrediction is forbidden now');
+    })
+
+    it("prediction not found", async function () {
+      await expect(this.alphasea.publishPredictions([{
+        modelId: 'model3',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [1, 2, 3],
+      }]))
+          .to.be.revertedWith('prediction not exist.');
+    })
+
+    it("already published", async function () {
+      await (await this.alphasea.publishPredictions([{
+        modelId: 'model1',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [1, 2, 3],
+      }])).wait()
+
+      await expect(this.alphasea.publishPredictions([{
+        modelId: 'model1',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [1, 2, 3],
+      }]))
+          .to.be.revertedWith('Already published.');
+    })
+
+    it("ok", async function () {
+      await expect(this.alphasea.publishPredictions([{
+        modelId: 'model1',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [1, 2, 3],
+      },{
+        modelId: 'model2',
+        executionStartAt: this.executionStartAt,
+        contentKeyGenerator: [4, 5, 6],
+      }]))
+          .to.emit(this.alphasea, 'PredictionPublished')
+          .withArgs(
+              'model1',
+              this.executionStartAt,
+              ethers.utils.solidityKeccak256(
+                  ['bytes', 'string'],
+                  [[1, 2, 3], 'model1']
+              ),
+          )
+          .to.emit(this.alphasea, 'PredictionPublished')
+          .withArgs(
+              'model2',
+              this.executionStartAt,
+              ethers.utils.solidityKeccak256(
+                  ['bytes', 'string'],
+                  [[4, 5, 6], 'model2']
+              ),
+          );
+    })
+  })
 });
