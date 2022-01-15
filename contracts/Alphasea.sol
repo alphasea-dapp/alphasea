@@ -263,11 +263,7 @@ contract Alphasea is ReentrancyGuard {
             sumPrice = sumPrice.add(price);
         }
 
-        require(msg.value >= sumPrice, "Not enough ETH sent.");
-
-        // refund exceeded
-        payable(msg.sender).transfer(msg.value.sub(sumPrice));
-        //        addBalance(msg.value.sub(sumPrice));
+        require(msg.value == sumPrice, "sent eth mismatch.");
     }
 
     function createPurchase(string calldata modelId, uint executionStartAt, bytes calldata publicKey)

@@ -4,7 +4,7 @@ const { defaultTournaments } = require('./helper')
 
 const daySeconds = 24 * 60 * 60
 
-describe("predictions", function () {
+describe("prediction", function () {
   before(async function () {
     this.Alphasea = await ethers.getContractFactory('Alphasea');
   });
