@@ -33,6 +33,7 @@ type Model @entity {
 type Prediction @entity {
   id: ID!
   model: Model!
+  executionStartAt: BigInt!
   price: BigInt!
   encryptedContent: Bytes!
   contentKey: Bytes

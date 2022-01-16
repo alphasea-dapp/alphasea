@@ -64,6 +64,7 @@ export function handlePredictionCreated(event: PredictionCreated): void {
   }
 
   entity.model = params.modelId
+  entity.executionStartAt = params.executionStartAt
   entity.price = params.price
   entity.encryptedContent = params.encryptedContent
   entity.createdAt = event.block.timestamp
