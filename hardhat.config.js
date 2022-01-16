@@ -19,7 +19,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 
 const config = {
-  solidity: "0.8.4",
+  solidity: "0.8.11",
   optimizer: {
     enabled: true
   },
