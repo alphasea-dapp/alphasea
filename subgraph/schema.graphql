@@ -10,6 +10,7 @@ type Tournament @entity {
   publicationTime: BigInt!
   description: String!
   createdAt: BigInt!
+  models: [Model!]! @derivedFrom(field: "tournament")
 }
 
 type Model @entity {
@@ -18,6 +19,7 @@ type Model @entity {
   owner: Bytes!
   predictionLicense: String!
   createdAt: BigInt!
+  predictions: [Prediction!]! @derivedFrom(field: "model")
 
   # computed
   totalEarnings: BigInt!
@@ -33,9 +35,10 @@ type Prediction @entity {
   model: Model!
   price: BigInt!
   encryptedContent: Bytes!
-  contentKey: String
+  contentKey: Bytes
   createdAt: BigInt!
   updatedAt: BigInt!
+  purchases: [Purchase!]! @derivedFrom(field: "prediction")
 
   # computed
   purchaseCount: BigInt!
@@ -45,10 +48,10 @@ type Prediction @entity {
 
 type Purchase @entity {
   id: ID!
-  purchaser: String!
-  publicKey: String!
+  purchaser: Bytes!
+  publicKey: Bytes!
   prediction: Prediction!
-  encryptedContentKey: String
+  encryptedContentKey: Bytes
   refunded: Boolean!
   createdAt: BigInt!
   updatedAt: BigInt!

@@ -90,7 +90,7 @@ export function handlePredictionPublished(event: PredictionPublished): void {
   }
 
   entity.model = params.modelId
-  entity.contentKey = params.contentKey.toHex()
+  entity.contentKey = params.contentKey
   entity.updatedAt = event.block.timestamp
   entity.save()
 
@@ -111,8 +111,8 @@ export function handlePurchaseCreated(event: PurchaseCreated): void {
     entity = new Purchase(id);
   }
 
-  entity.purchaser = params.purchaser.toHex()
-  entity.publicKey = params.publicKey.toHex()
+  entity.purchaser = params.purchaser
+  entity.publicKey = params.publicKey
   entity.prediction = predictionId
   entity.refunded = false;
   entity.createdAt = event.block.timestamp
@@ -142,7 +142,7 @@ export function handlePurchaseShipped(event: PurchaseShipped): void {
   }
 
   entity.prediction = predictionId
-  entity.encryptedContentKey = params.encryptedContentKey.toHex()
+  entity.encryptedContentKey = params.encryptedContentKey
   entity.updatedAt = event.block.timestamp
   entity.save()
 
