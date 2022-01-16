@@ -102,6 +102,14 @@ ALPHASEA_CONTRACT_ABIは npm run print_abi で取得できる。
 
 https://github.com/alphasea-dapp/alphasea-agent/blob/master/docker-compose-ropsten.yml
 
+### verification
+
+set env var ETHERSCAN_API_KEY
+
+```bash
+npx hardhat run --network ropsten scripts/verify.js
+```
+
 ### security check
 
 docker run -it -v $(pwd)/:/alphasea:ro trailofbits/eth-security-toolbox

@@ -5,7 +5,6 @@ pragma solidity 0.8.11;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "hardhat/console.sol";
 
 contract Alphasea is ReentrancyGuard {
     using SafeMath for uint;

@@ -19,6 +19,7 @@
     "solidity-coverage": "^0.7.17"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^3.0.0",
     "@openzeppelin/contracts": "^4.4.1"
   }
 }
