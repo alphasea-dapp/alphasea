@@ -55,7 +55,7 @@ describe("createModels", function () {
 
   it("invalid character in model_id", async function () {
     const invalidCharacters = [
-        '-', 'A', 'Z', '{', '`'
+        '-', 'A', 'Z', '{', '`', '/', ':', '^', ''
     ]
     for (let i = 0; i < invalidCharacters.length; i++) {
       await expect(this.alphasea.createModels([{
