@@ -54,21 +54,24 @@ describe("createModels", function () {
   });
 
   it("invalid character in model_id", async function () {
-    await expect(this.alphasea.createModels([{
-      modelId: '----',
-      tournamentId: 'crypto_daily',
-      predictionLicense: 'CC0-1.0'
-    }]))
-        .to.be.revertedWith('invalid modelId');
-  });
+    const invalidCharacters = [
+        '-', 'A', 'Z', '{', '`'
+    ]
+    for (let i = 0; i < invalidCharacters.length; i++) {
+      await expect(this.alphasea.createModels([{
+        modelId: invalidCharacters[i] + 'aaa',
+        tournamentId: 'crypto_daily',
+        predictionLicense: 'CC0-1.0'
+      }]))
+          .to.be.revertedWith('invalid modelId');
 
-  it("invalid character in model_id 2", async function () {
-    await expect(this.alphasea.createModels([{
-      modelId: 'aaa-',
-      tournamentId: 'crypto_daily',
-      predictionLicense: 'CC0-1.0'
-    }]))
-        .to.be.revertedWith('invalid modelId');
+      await expect(this.alphasea.createModels([{
+        modelId: 'aaa' + invalidCharacters[i],
+        tournamentId: 'crypto_daily',
+        predictionLicense: 'CC0-1.0'
+      }]))
+          .to.be.revertedWith('invalid modelId');
+    }
   });
 
   it("model_id start with number", async function () {
@@ -97,35 +100,35 @@ describe("createModels", function () {
 
   it("ok", async function () {
     await expect(this.alphasea.createModels([{
-      modelId: '_aA0',
+      modelId: '_az09',
       tournamentId: 'crypto_daily',
       predictionLicense: 'CC0-1.0'
     }, {
-      modelId: 'model2',
+      modelId: 'abcd',
       tournamentId: 'crypto_daily',
       predictionLicense: 'CC0-1.0'
     }]))
         .to.emit(this.alphasea, 'ModelCreated')
         .withArgs(
-            '_aA0',
+            '_az09',
             this.alphasea.signer.address,
             'crypto_daily',
             'CC0-1.0',
         )
         .to.emit(this.alphasea, 'ModelCreated')
         .withArgs(
-            'model2',
+            'abcd',
             this.alphasea.signer.address,
             'crypto_daily',
             'CC0-1.0',
         );
 
-    const model = await this.alphasea.models('_aA0');
+    const model = await this.alphasea.models('_az09');
     expect(model.owner).to.equal(this.alphasea.signer.address);
     expect(model.tournamentId).to.equal("crypto_daily");
     expect(model.predictionLicense).to.equal('CC0-1.0');
 
-    const model2 = await this.alphasea.models('model2');
+    const model2 = await this.alphasea.models('abcd');
     expect(model2.owner).to.equal(this.alphasea.signer.address);
     expect(model2.tournamentId).to.equal("crypto_daily");
     expect(model2.predictionLicense).to.equal('CC0-1.0');

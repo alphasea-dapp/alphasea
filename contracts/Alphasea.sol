@@ -437,16 +437,16 @@ contract Alphasea is ReentrancyGuard {
 
         if (z.length < 4 || z.length > 31) return false;
 
-        // c識別子
+        // 小文字のc識別子
         uint8 x = uint8(z[0]);
-        if (!isAlpha(x) && !isUnderscore(x)) {
+        if (!isAlphaLowercase(x) && !isUnderscore(x)) {
             return false;
         }
 
         for (uint i = 1; i < z.length; i++) {
             x = uint8(z[i]);
 
-            if (!isNum(x) && !isAlpha(x) && !isUnderscore(x)) {
+            if (!isNum(x) && !isAlphaLowercase(x) && !isUnderscore(x)) {
                 return false;
             }
         }
@@ -458,8 +458,8 @@ contract Alphasea is ReentrancyGuard {
         return 0x30 <= x && x <= 0x39;
     }
 
-    function isAlpha(uint8 x) private pure returns (bool) {
-        return (0x41 <= x && x <= 0x5a) || (0x61 <= x && x <= 0x7a);
+    function isAlphaLowercase(uint8 x) private pure returns (bool) {
+        return 0x61 <= x && x <= 0x7a;
     }
 
     function isUnderscore(uint8 x) private pure returns (bool) {
