@@ -104,7 +104,11 @@ describe("createModels", function () {
       tournamentId: 'crypto_daily',
       predictionLicense: 'CC0-1.0'
     }, {
-      modelId: 'abcd',
+      modelId: 'a'.repeat(4),
+      tournamentId: 'crypto_daily',
+      predictionLicense: 'CC0-1.0'
+    }, {
+      modelId: 'a'.repeat(31),
       tournamentId: 'crypto_daily',
       predictionLicense: 'CC0-1.0'
     }]))
@@ -117,7 +121,14 @@ describe("createModels", function () {
         )
         .to.emit(this.alphasea, 'ModelCreated')
         .withArgs(
-            'abcd',
+            'a'.repeat(4),
+            this.alphasea.signer.address,
+            'crypto_daily',
+            'CC0-1.0',
+        )
+        .to.emit(this.alphasea, 'ModelCreated')
+        .withArgs(
+            'a'.repeat(31),
             this.alphasea.signer.address,
             'crypto_daily',
             'CC0-1.0',
@@ -128,9 +139,14 @@ describe("createModels", function () {
     expect(model.tournamentId).to.equal("crypto_daily");
     expect(model.predictionLicense).to.equal('CC0-1.0');
 
-    const model2 = await this.alphasea.models('abcd');
+    const model2 = await this.alphasea.models('a'.repeat(4));
     expect(model2.owner).to.equal(this.alphasea.signer.address);
     expect(model2.tournamentId).to.equal("crypto_daily");
     expect(model2.predictionLicense).to.equal('CC0-1.0');
+
+    const model3 = await this.alphasea.models('a'.repeat(31));
+    expect(model3.owner).to.equal(this.alphasea.signer.address);
+    expect(model3.tournamentId).to.equal("crypto_daily");
+    expect(model3.predictionLicense).to.equal('CC0-1.0');
   });
 });
