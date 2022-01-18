@@ -195,7 +195,7 @@ describe("prediction", function () {
         price: 2,
       }])).wait()
 
-      this.publicationStartAt = this.executionStartAt + 60 * 60
+      this.publicationStartAt = this.executionStartAt + daySeconds + 60 * 60
 
       await ethers.provider.send("evm_setNextBlockTimestamp", [this.publicationStartAt])
     })

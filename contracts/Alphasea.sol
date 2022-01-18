@@ -419,7 +419,7 @@ contract Alphasea is ReentrancyGuard {
     }
 
     function isTimePublishable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {
-        uint startAt = executionStartAt.add(tournament.executionTime);
+        uint startAt = executionStartAt.add(tournament.executionTime).add(DAY_SECONDS);
         uint endAt = startAt.add(tournament.publicationTime);
         return startAt <= time && time < endAt;
     }
