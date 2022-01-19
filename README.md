@@ -102,7 +102,28 @@ ALPHASEA_CONTRACT_ABIは npm run print_abi で取得できる。
 
 https://github.com/alphasea-dapp/alphasea-agent/blob/master/docker-compose-ropsten.yml
 
-### verification
+### testnet (mumbai)
+
+set ROPSTEN_PRIVATE_KEY env var
+
+```bash
+npx hardhat clean
+npx hardhat compile
+npx hardhat run --network mumbai scripts/deploy.js
+```
+
+subgraph/subgraph-mumbai.yaml内のdataSources[0].source.addressを、
+デプロイしたコントラクトアドレスに書き換える。
+
+```bash
+cd subgraph
+npm run codegen
+npx graph auth --product hosted-service $THEGRAPH_COM_ACCESS_TOKEN
+npm run deploy-mumbai
+```
+
+
+### verification (ropsten)
 
 set env var ETHERSCAN_API_KEY
 

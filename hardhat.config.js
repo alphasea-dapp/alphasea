@@ -43,7 +43,7 @@ if (process.env.ROPSTEN_PRIVATE_KEY) {
     url: 'https://ropsten.infura.io/v3/a3313d9ab92742e3bb3aef9c78c859d6',
     accounts: [process.env.ROPSTEN_PRIVATE_KEY]
   }
-  config.networks.munbai = {
+  config.networks.mumbai = {
     url: "https://rpc-mumbai.maticvigil.com",
     accounts: [process.env.ROPSTEN_PRIVATE_KEY]
   }
