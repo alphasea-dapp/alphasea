@@ -8,7 +8,7 @@ const config = require('./config')
 
 async function main() {
     await hre.run("verify:verify", {
-        address: '0x922567E315A3C848a9c5DeD0e96b05155FbdfAE9',
+        address: '0xDf4D877c5e1067BA130bf97bF7a194a9B9a92940',
         constructorArguments: [
             config.tournaments
         ],

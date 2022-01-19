@@ -131,6 +131,14 @@ set env var ETHERSCAN_API_KEY
 npx hardhat run --network ropsten scripts/verify.js
 ```
 
+### verification (mumbai)
+
+set env var POLYGONSCAN_API_KEY
+
+```bash
+npx hardhat run --network mumbai scripts/verify.js
+```
+
 ### security check
 
 docker run -it -v $(pwd)/:/alphasea:ro trailofbits/eth-security-toolbox
