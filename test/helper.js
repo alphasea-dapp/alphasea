@@ -4,11 +4,11 @@ const { network } = require("hardhat");
 const defaultTournaments = [
     {
         'tournamentId': 'crypto_daily',
-        'executionStartAt': 60 * 60,
-        'predictionTime': 15 * 60,
-        'purchaseTime': 15 * 60,
-        'shippingTime': 15 * 60,
-        'executionPreparationTime': 15 * 60,
+        'executionStartAt': 15 * 60, // 0:15UTC
+        'predictionTime': 4 * 60,
+        'purchaseTime': 4 * 60,
+        'shippingTime': 4 * 60,
+        'executionPreparationTime': 3 * 60,
         'executionTime': 60 * 60,
         'publicationTime': 15 * 60,
         'description': 'description1',

@@ -38,8 +38,8 @@ describe("prediction", function () {
     }])).wait()
 
     const baseTime = Math.floor(2000000000 / daySeconds) * daySeconds;
-    this.executionStartAt = baseTime + 60 * 60
-    this.predictionStartAt = this.executionStartAt - 4 * 15 * 60
+    this.executionStartAt = baseTime + 15 * 60
+    this.predictionStartAt = this.executionStartAt - 15 * 60
 
     await ethers.provider.send("evm_setNextBlockTimestamp", [this.predictionStartAt])
   });
@@ -114,7 +114,7 @@ describe("prediction", function () {
     });
 
     it("too late", async function () {
-      await ethers.provider.send("evm_setNextBlockTimestamp", [this.predictionStartAt + 15 * 60])
+      await ethers.provider.send("evm_setNextBlockTimestamp", [this.predictionStartAt + 4 * 60])
 
       await expect(this.alphasea.createPredictions([{
         modelId: 'model1',
