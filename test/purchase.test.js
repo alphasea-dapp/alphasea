@@ -39,11 +39,11 @@ describe("purchase", function () {
     }])).wait()
 
     const baseTime = Math.floor(2000000000 / daySeconds) * daySeconds;
-    this.executionStartAt = baseTime + 15 * 60
-    this.predictionStartAt = this.executionStartAt - 15 * 60
-    this.purchaseStartAt = this.executionStartAt - 11 * 60
-    this.shippingStartAt = this.executionStartAt - 7 * 60
-    this.refundStartAt = this.executionStartAt - 3 * 60
+    this.executionStartAt = baseTime + 30 * 60
+    this.predictionStartAt = this.executionStartAt - 30 * 60
+    this.purchaseStartAt = this.executionStartAt - 22 * 60
+    this.shippingStartAt = this.executionStartAt - 14 * 60
+    this.refundStartAt = this.executionStartAt - 6 * 60
 
     await ethers.provider.send("evm_setNextBlockTimestamp", [this.predictionStartAt])
 
@@ -110,7 +110,7 @@ describe("purchase", function () {
 
     it("too late", async function () {
       await ethers.provider.send("evm_setNextBlockTimestamp",
-          [this.purchaseStartAt + 4 * 60])
+          [this.purchaseStartAt + 8 * 60])
 
       await expect(this.alphasea.connect(this.otherAddress).createPurchases([{
         modelId: 'model1',
@@ -264,7 +264,7 @@ describe("purchase", function () {
 
     it("too late", async function () {
       await ethers.provider.send("evm_setNextBlockTimestamp",
-          [this.shippingStartAt + 4 * 60])
+          [this.shippingStartAt + 8 * 60])
 
       await expect(this.alphasea.shipPurchases([{
         modelId: 'model1',
