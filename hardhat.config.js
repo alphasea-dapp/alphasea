@@ -40,7 +40,16 @@ const config = {
 
 if (process.env.ROPSTEN_PRIVATE_KEY) {
   config.networks.ropsten = {
-    url: `http://127.0.0.1:18545`,
+    url: 'https://ropsten.infura.io/v3/a3313d9ab92742e3bb3aef9c78c859d6',
+    accounts: [process.env.ROPSTEN_PRIVATE_KEY]
+  }
+  config.networks.munbai = {
+    url: "https://rpc-mumbai.maticvigil.com",
+    accounts: [process.env.ROPSTEN_PRIVATE_KEY]
+  }
+  config.networks.fuji = {
+    url: 'https://api.avax-test.network/ext/bc/C/rpc',
+    chainId: 43113,
     accounts: [process.env.ROPSTEN_PRIVATE_KEY]
   }
 }
