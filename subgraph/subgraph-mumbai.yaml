@@ -6,7 +6,7 @@ dataSources:
     name: Alphasea
     network: mumbai
     source:
-      address: "0xdf9b68cf2630FA451EE6C17A4a6Ec83F8B7431A0"
+      address: "0x530F00c8877deE52b30fc87BcAdE597fc6e269eb"
       abi: Alphasea
       startBlock: 24033343
     mapping:
