@@ -23,6 +23,7 @@ async function main() {
     await alphasea.deployed();
 
     console.log("Alphasea deployed to:", alphasea.address);
+    console.log('this address is wrong when network is polygon')
 }
 
 // We recommend this pattern to be able to use async/await everywhere
