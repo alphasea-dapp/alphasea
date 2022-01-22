@@ -1,6 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { defaultTournaments } = require('./helper')
+const _ = require('lodash')
 
 const daySeconds = 24 * 60 * 60
 
@@ -150,6 +151,27 @@ describe("prediction", function () {
         price: 1,
       }]))
           .to.be.revertedWith('prediction already exists.');
+    });
+
+    describe("multiple executionStartAt", async function () {
+      _.each(_.range(0, 24, 2), (hour) => {
+        it('ok ' + hour, async function () {
+          await ethers.provider.send("evm_setNextBlockTimestamp", [this.predictionStartAt + hour * 60 * 60])
+          await expect(this.alphasea.createPredictions([{
+            modelId: 'model1',
+            executionStartAt: this.executionStartAt + hour * 60 * 60,
+            encryptedContent: [1, 2, 3],
+            price: 1,
+          }]))
+              .to.emit(this.alphasea, 'PredictionCreated')
+              .withArgs(
+                  'model1',
+                  this.executionStartAt + hour * 60 * 60,
+                  1,
+                  '0x010203',
+              )
+        })
+      })
     });
 
     it("ok", async function () {

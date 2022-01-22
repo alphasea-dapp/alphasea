@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
+// https://github.com/alphasea-dapp/alphasea
 
 pragma solidity 0.8.11;
 
@@ -40,10 +41,6 @@ contract Alphasea is ReentrancyGuard {
         string predictionLicense;
         mapping(uint => Prediction) predictions; // key: executionStartAt
     }
-
-    // PredictionとPurchaseは数が多いので、
-    // contractからreadしないものは、
-    // eventに書き込んでgas代を節約する
 
     struct Prediction {
         uint248 price;
@@ -392,7 +389,7 @@ contract Alphasea is ReentrancyGuard {
     // timeline
 
     function isValidExecutionStartAt(Tournament storage tournament, uint executionStartAt) private view returns (bool) {
-        return executionStartAt.mod(DAY_SECONDS) == tournament.executionStartAt;
+        return executionStartAt.mod(tournament.executionTime) == tournament.executionStartAt;
     }
 
     function isTimePredictable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {

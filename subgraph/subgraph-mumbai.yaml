@@ -6,9 +6,9 @@ dataSources:
     name: Alphasea
     network: mumbai
     source:
-      address: "0x530F00c8877deE52b30fc87BcAdE597fc6e269eb"
+      address: "0xaA23CeE0EC656FcC2378eb2D2ad1198503CDd2a0"
       abi: Alphasea
-      startBlock: 24033343
+      startBlock: 24151941
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5

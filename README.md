@@ -150,3 +150,7 @@ docker run -it -v $(pwd)/:/alphasea:ro mythril/myth
 github actionsでビルドを行っている。
 
 設定: .github/workflows/build.yml
+
+### Contract
+
+- PredictionとPurchaseは数が多いので、contractからreadしないものは、eventに書き込んでgas代を節約する
