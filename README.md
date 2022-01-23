@@ -154,3 +154,4 @@ github actionsでビルドを行っている。
 ### Contract
 
 - PredictionとPurchaseは数が多いので、contractからreadしないものは、eventに書き込んでgas代を節約する
+- 他コントラクトから全てのデータを検証できるようにgetterを作った (automatic getterで足りるものは作らない)

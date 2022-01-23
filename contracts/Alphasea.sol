@@ -74,6 +74,19 @@ contract Alphasea is ReentrancyGuard {
     mapping(string => Model) public models; // key: modelId
     //    mapping(address => uint) public balances;
 
+    // getters
+    function getPredictions(string calldata modelId, uint executionStartAt)
+        external view returns (uint248 price, bool published) {
+        Prediction storage prediction = models[modelId].predictions[executionStartAt];
+        return (prediction.price, prediction.published);
+    }
+
+    function getPurchases(string calldata modelId, uint executionStartAt, address purchaser)
+        external view returns (bool created, bool shipped, bool refunded) {
+        Purchase storage purchase = models[modelId].predictions[executionStartAt].purchases[purchaser];
+        return (purchase.created, purchase.shipped, purchase.refunded);
+    }
+
     modifier onlyModelOwner(string calldata modelId) {
         require(modelExists(models[modelId]), "modelId not exist.");
         require(models[modelId].owner == msg.sender, "model owner only.");
