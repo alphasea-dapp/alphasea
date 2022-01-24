@@ -60,6 +60,11 @@ npm run create-local
 npm run deploy-local
 ```
 
+thegraph hosted
+
+- https://thegraph.com/hosted-service/subgraph/richmanbtc/alphasea-polygon
+- https://thegraph.com/hosted-service/subgraph/richmanbtc/alphasea-mumbai
+
 ### testnet (ropsten)
 
 ropsten用のgeth起動
