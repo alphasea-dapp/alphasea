@@ -1,0 +1,38 @@
+specVersion: 0.0.2
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Alphasea
+    network: matic
+    source:
+      address: "0x9fD5e48d7Fb0c4a08d387EF87B17fe5861DB0506"
+      abi: Alphasea
+      startBlock: 24114285
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Tournament
+        - Model
+        - Prediction
+        - Purchase
+      abis:
+        - name: Alphasea
+          file: ../artifacts/contracts/Alphasea.sol/Alphasea.json
+      eventHandlers:
+        - event: TournamentCreated(string,uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)
+          handler: handleTournamentCreated
+        - event: ModelCreated(string,address,string,string)
+          handler: handleModelCreated
+        - event: PredictionCreated(string,uint256,uint256,bytes)
+          handler: handlePredictionCreated
+        - event: PredictionPublished(string,uint256,bytes32)
+          handler: handlePredictionPublished
+        - event: PurchaseCreated(string,uint256,address,bytes)
+          handler: handlePurchaseCreated
+        - event: PurchaseShipped(string,uint256,address,bytes)
+          handler: handlePurchaseShipped
+      file: ./src/mapping.ts
+

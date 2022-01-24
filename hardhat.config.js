@@ -35,8 +35,16 @@ const config = {
       mainnet: process.env.ETHERSCAN_API_KEY,
       ropsten: process.env.ETHERSCAN_API_KEY,
       polygonMumbai: process.env.POLYGONSCAN_API_KEY,
+      polygon: process.env.POLYGONSCAN_API_KEY,
     }
   },
+}
+
+if (process.env.POLYGON_PRIVATE_KEY) {
+  config.networks.polygon = {
+    url: "https://polygon-rpc.com",
+    accounts: [process.env.POLYGON_PRIVATE_KEY]
+  }
 }
 
 if (process.env.ROPSTEN_PRIVATE_KEY) {

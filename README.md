@@ -122,6 +122,29 @@ npx graph auth --product hosted-service $THEGRAPH_COM_ACCESS_TOKEN
 npm run deploy-mumbai
 ```
 
+### mainnet deploy (polygon)
+
+set POLYGON_PRIVATE_KEY env var
+
+```bash
+export POLYGON_PRIVATE_KEY=$(cat /path/to/private_key)
+```
+
+```bash
+npx hardhat clean
+npx hardhat compile
+npx hardhat run --network polygon scripts/deploy.js
+```
+
+subgraph/subgraph-polygon.yaml内のdataSources[0].source.addressを、
+デプロイしたコントラクトアドレスに書き換える。
+
+```bash
+cd subgraph
+npm run codegen
+npx graph auth --product hosted-service $THEGRAPH_COM_ACCESS_TOKEN
+npm run deploy-polygon
+```
 
 ### verification (ropsten)
 
@@ -137,6 +160,14 @@ set env var POLYGONSCAN_API_KEY
 
 ```bash
 npx hardhat run --network mumbai scripts/verify.js
+```
+
+### verification (polygon)
+
+set env var POLYGONSCAN_API_KEY
+
+```bash
+npx hardhat run --network polygon scripts/verify.js
 ```
 
 ### security check
