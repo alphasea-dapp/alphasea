@@ -7,6 +7,12 @@ This repository contains
 - AlphaSea smart contract written in solidity
 - AlphaSea subgraph definition
 
+## Deployed contract
+
+|Contract|Network|Address|
+|:-:|:-:|:-:|
+|Alphasea|Polygon mainnet|[0x9fD5e48d7Fb0c4a08d387EF87B17fe5861DB0506](https://polygonscan.com/address/0x9fD5e48d7Fb0c4a08d387EF87B17fe5861DB0506#code)|
+
 ## Development
 
 ```shell
