@@ -1,13 +1,11 @@
 # AlphaSea
 
-AlphaSea is a decentralized marketplace for market alpha.
+[AlphaSea](https://alphasea.io/) is a decentralized marketplace for market alpha.
 
-## 今の仕組み
+This repository contains
 
-以下がベースになっています。
-burnはやめました。
-
-https://note.com/btcml/n/n7662cc156466
+- AlphaSea smart contract written in solidity
+- AlphaSea subgraph definition
 
 ## Development
 
@@ -187,7 +185,7 @@ github actionsでビルドを行っている。
 
 設定: .github/workflows/build.yml
 
-### Contract
+### Contract design
 
 - PredictionとPurchaseは数が多いので、contractからreadしないものは、eventに書き込んでgas代を節約する
 - 他コントラクトから全てのデータを検証できるようにgetterを作った (automatic getterで足りるものは作らない)
