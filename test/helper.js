@@ -6,8 +6,7 @@ const defaultTournaments = [
         'tournamentId': 'crypto_daily',
         'executionStartAt': 30 * 60, // 0:30UTC
         'predictionTime': 8 * 60,
-        'purchaseTime': 8 * 60,
-        'shippingTime': 8 * 60,
+        'sendingTime': 16 * 60,
         'executionPreparationTime': 6 * 60,
         'executionTime': 60 * 60,
         'publicationTime': 15 * 60,

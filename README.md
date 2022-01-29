@@ -193,5 +193,8 @@ github actionsでビルドを行っている。
 
 ### Contract design
 
-- PredictionとPurchaseは数が多いので、contractからreadしないものは、eventに書き込んでgas代を節約する
-- 他コントラクトから全てのデータを検証できるようにgetterを作った (automatic getterで足りるものは作らない)
+- Predictionは数が多いので、contractからreadしないものは、eventに書き込んでgas代を節約する
+- gas代節約のために二重投稿は防がない。先を正とする
+- predictionはaddressごとに同じキーで暗号化
+- インターフェースはガス代節約重視で決める (一貫性が無い)
+- 他コントラクトから全てのデータを検証できるようにgetterを作る (automatic getterで足りるものは作らない)

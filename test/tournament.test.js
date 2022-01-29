@@ -6,8 +6,7 @@ const tournaments = [
     'tournamentId': 'tournament1',
     'executionStartAt': 1,
     'predictionTime': 2,
-    'purchaseTime': 3,
-    'shippingTime': 4,
+    'sendingTime': 3,
     'executionPreparationTime': 5,
     'executionTime': 6,
     'publicationTime': 7,
@@ -31,8 +30,7 @@ describe("tournament", function () {
 
     expect(tournament.executionStartAt).to.equal(1);
     expect(tournament.predictionTime).to.equal(2);
-    expect(tournament.purchaseTime).to.equal(3);
-    expect(tournament.shippingTime).to.equal(4);
+    expect(tournament.sendingTime).to.equal(3);
     expect(tournament.executionPreparationTime).to.equal(5);
     expect(tournament.executionTime).to.equal(6);
     expect(tournament.publicationTime).to.equal(7);

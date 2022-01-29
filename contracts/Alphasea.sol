@@ -5,9 +5,8 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Alphasea is ReentrancyGuard {
+contract Alphasea {
     using SafeMath for uint;
 
     uint constant DAY_SECONDS = 24 * 60 * 60;
@@ -16,8 +15,7 @@ contract Alphasea is ReentrancyGuard {
         string tournamentId;
         uint32 executionStartAt;
         uint32 predictionTime;
-        uint32 purchaseTime;
-        uint32 shippingTime;
+        uint32 sendingTime;
         uint32 executionPreparationTime;
         uint32 executionTime;
         uint32 publicationTime;
@@ -27,8 +25,7 @@ contract Alphasea is ReentrancyGuard {
     struct Tournament {
         uint32 executionStartAt;
         uint32 predictionTime;
-        uint32 purchaseTime;
-        uint32 shippingTime;
+        uint32 sendingTime;
         uint32 executionPreparationTime;
         uint32 executionTime;
         uint32 publicationTime;
@@ -39,53 +36,24 @@ contract Alphasea is ReentrancyGuard {
         address owner;
         string tournamentId;
         string predictionLicense;
-        mapping(uint => Prediction) predictions; // key: executionStartAt
     }
 
-    struct Prediction {
-        uint248 price;
-        bool published;
-        mapping(address => Purchase) purchases; // key: purchaser
-    }
-
-    struct Purchase {
-        bool created;
-        bool shipped;
-        bool refunded;
-    }
-
+    event PublicKeyChanged(address owner, bytes publicKey);
     event TournamentCreated(string tournamentId,
         uint executionStartAt,
         uint predictionTime,
-        uint purchaseTime,
-        uint shippingTime,
+        uint sendingTime,
         uint executionPreparationTime,
         uint executionTime,
         uint publicationTime,
         string description);
     event ModelCreated(string modelId, address owner, string tournamentId, string predictionLicense);
-    event PredictionCreated(string modelId, uint executionStartAt, uint price, bytes encryptedContent);
-    event PredictionPublished(string modelId, uint executionStartAt, bytes32 contentKey);
-    event PurchaseCreated(string modelId, uint executionStartAt, address purchaser, bytes publicKey);
-    event PurchaseShipped(string modelId, uint executionStartAt, address purchaser, bytes encryptedContentKey);
-    event PurchaseRefunded(string modelId, uint executionStartAt, address purchaser);
+    event PredictionCreated(string modelId, uint executionStartAt, bytes encryptedContent);
+    event PredictionKeyPublished(address sender, string tournamentId, uint executionStartAt, bytes32 contentKey);
+    event PredictionKeySent(address sender, string tournamentId, uint executionStartAt, address receiver, bytes encryptedContentKey);
 
     mapping(string => Tournament) public tournaments; // key: tournamentId
     mapping(string => Model) public models; // key: modelId
-    //    mapping(address => uint) public balances;
-
-    // getters
-    function getPredictions(string calldata modelId, uint executionStartAt)
-        external view returns (uint248 price, bool published) {
-        Prediction storage prediction = models[modelId].predictions[executionStartAt];
-        return (prediction.price, prediction.published);
-    }
-
-    function getPurchases(string calldata modelId, uint executionStartAt, address purchaser)
-        external view returns (bool created, bool shipped, bool refunded) {
-        Purchase storage purchase = models[modelId].predictions[executionStartAt].purchases[purchaser];
-        return (purchase.created, purchase.shipped, purchase.refunded);
-    }
 
     modifier onlyModelOwner(string calldata modelId) {
         require(modelExists(models[modelId]), "modelId not exist.");
@@ -93,20 +61,8 @@ contract Alphasea is ReentrancyGuard {
         _;
     }
 
-    modifier onlyPredictionExists(string calldata modelId, uint executionStartAt) {
-        require(modelExists(models[modelId]), "modelId not exist.");
-        require(predictionExists(models[modelId].predictions[executionStartAt]), "prediction not exist.");
-        _;
-    }
-
     modifier checkPredictionLicense(string calldata predictionLicense) {
         require(strEquals(predictionLicense, "CC0-1.0"), "predictionLicense must be CC0-1.0.");
-        _;
-    }
-
-    modifier checkPrice(uint price) {
-        require(price > 0, "price must be positive.");
-        require(price <= type(uint248).max, "price must be < 2^248");
         _;
     }
 
@@ -116,8 +72,7 @@ contract Alphasea is ReentrancyGuard {
             Tournament storage tournament = tournaments[t.tournamentId];
             tournament.executionStartAt = t.executionStartAt;
             tournament.predictionTime = t.predictionTime;
-            tournament.purchaseTime = t.purchaseTime;
-            tournament.shippingTime = t.shippingTime;
+            tournament.sendingTime = t.sendingTime;
             tournament.executionPreparationTime = t.executionPreparationTime;
             tournament.executionTime = t.executionTime;
             tournament.publicationTime = t.publicationTime;
@@ -127,8 +82,7 @@ contract Alphasea is ReentrancyGuard {
                 t.tournamentId,
                 t.executionStartAt,
                 t.predictionTime,
-                t.purchaseTime,
-                t.shippingTime,
+                t.sendingTime,
                 t.executionPreparationTime,
                 t.executionTime,
                 t.publicationTime,
@@ -139,13 +93,10 @@ contract Alphasea is ReentrancyGuard {
 
     // account operation
 
-    //    function withdraw() external nonReentrant {
-    //        require(balances[msg.sender] > 0, "balance == 0.");
-    //
-    //        uint amount = balances[msg.sender];
-    //        balances[msg.sender] = 0;
-    //        payable(msg.sender).transfer(amount);
-    //    }
+    function changePublicKey(bytes calldata publicKey) external {
+        require(publicKey.length > 0, "publicKey empty");
+        emit PublicKeyChanged(msg.sender, publicKey);
+    }
 
     // model operation
 
@@ -156,7 +107,7 @@ contract Alphasea is ReentrancyGuard {
     }
 
     function createModels(CreateModelParam[] calldata params)
-    external nonReentrant {
+    external {
         require(params.length > 0, "empty params");
 
         for (uint i = 0; i < params.length; i++) {
@@ -188,22 +139,21 @@ contract Alphasea is ReentrancyGuard {
         string modelId;
         uint executionStartAt;
         bytes encryptedContent;
-        uint price;
     }
 
     function createPredictions(CreatePredictionParam[] calldata params)
-    external nonReentrant {
+    external {
         require(params.length > 0, "empty params");
 
         for (uint i = 0; i < params.length; i++) {
             createPrediction(params[i].modelId, params[i].executionStartAt,
-                params[i].encryptedContent, params[i].price);
+                params[i].encryptedContent);
         }
     }
 
     function createPrediction(string calldata modelId, uint executionStartAt,
-        bytes calldata encryptedContent, uint price)
-    private checkPrice(price) onlyModelOwner(modelId) {
+        bytes calldata encryptedContent)
+    private onlyModelOwner(modelId) {
 
         require(encryptedContent.length > 0, "encryptedContent empty");
 
@@ -212,173 +162,47 @@ contract Alphasea is ReentrancyGuard {
         require(isValidExecutionStartAt(tournament, executionStartAt), "executionStartAt is invalid");
         require(isTimePredictable(tournament, executionStartAt, getTimestamp()), "createPrediction is forbidden now");
 
-        Prediction storage prediction = model.predictions[executionStartAt];
-        require(!predictionExists(prediction), "prediction already exists.");
-
-        prediction.price = uint248(price);
-
-        emit PredictionCreated(modelId, executionStartAt, price, encryptedContent);
+        emit PredictionCreated(modelId, executionStartAt, encryptedContent);
     }
 
-    struct PublishPredictionParam {
-        string modelId;
-        uint executionStartAt;
-        bytes contentKeyGenerator;
-    }
-
-    function publishPredictions(PublishPredictionParam[] calldata params)
-    external nonReentrant {
-        require(params.length > 0, "empty params");
-
-        for (uint i = 0; i < params.length; i++) {
-            publishPrediction(params[i].modelId, params[i].executionStartAt,
-                params[i].contentKeyGenerator);
-        }
-    }
-
-    function publishPrediction(string calldata modelId, uint executionStartAt, bytes calldata contentKeyGenerator)
-    private onlyModelOwner(modelId) onlyPredictionExists(modelId, executionStartAt) {
+    function publishPredictionKey(string calldata tournamentId,
+        uint executionStartAt, bytes calldata contentKeyGenerator)
+    external {
+        address owner = msg.sender;
 
         require(contentKeyGenerator.length > 0, "contentKeyGenerator empty");
 
-        Model storage model = models[modelId];
-        Tournament storage tournament = tournaments[model.tournamentId];
+        Tournament storage tournament = tournaments[tournamentId];
         require(isTimePublishable(tournament, executionStartAt, getTimestamp()), "publishPrediction is forbidden now");
 
-        Prediction storage prediction = model.predictions[executionStartAt];
-        require(!prediction.published, "Already published.");
-
-        bytes32 contentKey = keccak256(abi.encodePacked(contentKeyGenerator, modelId));
-
-        prediction.published = true;
-
-        emit PredictionPublished(modelId, executionStartAt, contentKey);
+        bytes32 contentKey = keccak256(abi.encodePacked(contentKeyGenerator, owner));
+        emit PredictionKeyPublished(owner, tournamentId, executionStartAt, contentKey);
     }
 
-    struct CreatePurchaseParam {
-        string modelId;
-        uint executionStartAt;
-        bytes publicKey;
-    }
-
-    function createPurchases(CreatePurchaseParam[] calldata params)
-    external payable nonReentrant {
-        require(params.length > 0, "empty params");
-
-        uint sumPrice = 0;
-        for (uint i = 0; i < params.length; i++) {
-            uint price = createPurchase(params[i].modelId, params[i].executionStartAt,
-                params[i].publicKey);
-            sumPrice = sumPrice.add(price);
-        }
-
-        require(msg.value == sumPrice, "sent eth mismatch.");
-    }
-
-    function createPurchase(string calldata modelId, uint executionStartAt, bytes calldata publicKey)
-    private onlyPredictionExists(modelId, executionStartAt) returns (uint) {
-
-        require(publicKey.length > 0, "publicKey empty");
-
-        Model storage model = models[modelId];
-        require(model.owner != msg.sender, "cannot purchase my models.");
-        Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimePurchasable(tournament, executionStartAt, getTimestamp()), "createPurchase is forbidden now");
-
-        Prediction storage prediction = models[modelId].predictions[executionStartAt];
-        Purchase storage purchase = prediction.purchases[msg.sender];
-        require(!purchaseExists(purchase), "Already purchased.");
-
-        purchase.created = true;
-
-        emit PurchaseCreated(modelId, executionStartAt, msg.sender, publicKey);
-
-        return prediction.price;
-    }
-
-    struct ShipPurchaseParam {
-        string modelId;
-        uint executionStartAt;
-        address purchaser;
+    struct SendPredictionKeyParam {
+        address receiver;
         bytes encryptedContentKey;
     }
 
-    function shipPurchases(ShipPurchaseParam[] calldata params)
-    external nonReentrant {
+    function sendPredictionKeys(string calldata tournamentId,
+        uint executionStartAt, SendPredictionKeyParam[] calldata params)
+    external {
         require(params.length > 0, "empty params");
 
-        uint sumPrice = 0;
         for (uint i = 0; i < params.length; i++) {
-            uint price = shipPurchase(params[i].modelId, params[i].executionStartAt,
-                params[i].purchaser, params[i].encryptedContentKey);
-            sumPrice = sumPrice.add(price);
+            require(params[i].receiver != msg.sender, "cannot send to me");
+            require(params[i].encryptedContentKey.length > 0, "encryptedContentKey empty");
         }
 
-        payable(msg.sender).transfer(sumPrice);
-        //        addBalance(sumPrice);
-    }
-
-    function shipPurchase(string calldata modelId, uint executionStartAt, address purchaser, bytes calldata encryptedContentKey)
-    private onlyModelOwner(modelId) onlyPredictionExists(modelId, executionStartAt) returns (uint) {
-
-        require(encryptedContentKey.length > 0, "encryptedContentKey empty.");
-
-        Model storage model = models[modelId];
         {
-            Tournament storage tournament = tournaments[model.tournamentId];
-            require(isTimeShippable(tournament, executionStartAt, getTimestamp()), "shipPurchase is forbidden now");
+            Tournament storage tournament = tournaments[tournamentId];
+            require(isTimeSendable(tournament, executionStartAt, getTimestamp()), "sendPredictionKeys is forbidden now");
         }
 
-        Prediction storage prediction = model.predictions[executionStartAt];
-        {
-            Purchase storage purchase = prediction.purchases[purchaser];
-            require(purchaseExists(purchase), "Purchase not found.");
-            require(!purchase.shipped, "Already shipped.");
-            purchase.shipped = true;
-        }
-
-        emit PurchaseShipped(modelId, executionStartAt, purchaser, encryptedContentKey);
-
-        return prediction.price;
-    }
-
-    struct RefundPurchaseParam {
-        string modelId;
-        uint executionStartAt;
-    }
-
-    function refundPurchases(RefundPurchaseParam[] calldata params)
-    external nonReentrant {
-        require(params.length > 0, "empty params");
-
-        uint sumPrice = 0;
         for (uint i = 0; i < params.length; i++) {
-            uint price = refundPurchase(params[i].modelId, params[i].executionStartAt);
-            sumPrice = sumPrice.add(price);
+            emit PredictionKeySent(msg.sender, tournamentId,
+                executionStartAt, params[i].receiver, params[i].encryptedContentKey);
         }
-
-        payable(msg.sender).transfer(sumPrice);
-        //        addBalance(sumPrice);
-    }
-
-    function refundPurchase(string calldata modelId, uint executionStartAt)
-    private onlyPredictionExists(modelId, executionStartAt) returns (uint) {
-
-        Model storage model = models[modelId];
-        Tournament storage tournament = tournaments[model.tournamentId];
-        require(isTimeRefundable(tournament, executionStartAt, getTimestamp()), "refundPurchase is forbidden now");
-
-        Prediction storage prediction = model.predictions[executionStartAt];
-        Purchase storage purchase = prediction.purchases[msg.sender];
-        require(purchaseExists(purchase), "Purchase not found.");
-        require(!purchase.shipped, "Already shipped.");
-        require(!purchase.refunded, "Already refunded.");
-
-        purchase.refunded = true;
-
-        emit PurchaseRefunded(modelId, executionStartAt, msg.sender);
-
-        return prediction.price;
     }
 
     // private
@@ -391,14 +215,6 @@ contract Alphasea is ReentrancyGuard {
         return model.owner != address(0);
     }
 
-    function predictionExists(Prediction storage prediction) private view returns (bool) {
-        return prediction.price > 0;
-    }
-
-    function purchaseExists(Purchase storage purchase) private view returns (bool) {
-        return purchase.created;
-    }
-
     // timeline
 
     function isValidExecutionStartAt(Tournament storage tournament, uint executionStartAt) private view returns (bool) {
@@ -406,20 +222,14 @@ contract Alphasea is ReentrancyGuard {
     }
 
     function isTimePredictable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {
-        uint endAt = executionStartAt.sub(tournament.executionPreparationTime).sub(tournament.shippingTime).sub(tournament.purchaseTime);
+        uint endAt = executionStartAt.sub(tournament.executionPreparationTime).sub(tournament.sendingTime);
         uint startAt = endAt.sub(tournament.predictionTime);
         return startAt <= time && time < endAt;
     }
 
-    function isTimePurchasable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {
-        uint endAt = executionStartAt.sub(tournament.executionPreparationTime).sub(tournament.shippingTime);
-        uint startAt = endAt.sub(tournament.purchaseTime);
-        return startAt <= time && time < endAt;
-    }
-
-    function isTimeShippable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {
+    function isTimeSendable(Tournament storage tournament, uint executionStartAt, uint time) private view returns (bool) {
         uint endAt = executionStartAt.sub(tournament.executionPreparationTime);
-        uint startAt = endAt.sub(tournament.shippingTime);
+        uint startAt = endAt.sub(tournament.sendingTime);
         return startAt <= time && time < endAt;
     }
 
@@ -433,12 +243,6 @@ contract Alphasea is ReentrancyGuard {
         uint endAt = startAt.add(tournament.publicationTime);
         return startAt <= time && time < endAt;
     }
-
-    // pending requests
-
-    //    function addBalance(uint amount) private {
-    //        balances[msg.sender] = balances[msg.sender].add(amount);
-    //    }
 
     // strings
 
