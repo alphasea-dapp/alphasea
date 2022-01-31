@@ -52,6 +52,7 @@ contract Alphasea {
     event PredictionKeyPublished(address owner, string tournamentId, uint executionStartAt, bytes32 contentKey);
     event PredictionKeySent(address owner, string tournamentId, uint executionStartAt, address receiver, bytes encryptedContentKey);
 
+    mapping(address => bytes) public publicKeys;
     mapping(string => Tournament) public tournaments; // key: tournamentId
     mapping(string => Model) public models; // key: modelId
 
@@ -95,6 +96,7 @@ contract Alphasea {
 
     function changePublicKey(bytes calldata publicKey) external {
         require(publicKey.length > 0, "publicKey empty");
+        publicKeys[msg.sender] = publicKey;
         emit PublicKeyChanged(msg.sender, publicKey);
     }
 
@@ -192,6 +194,7 @@ contract Alphasea {
         for (uint i = 0; i < params.length; i++) {
             require(params[i].receiver != msg.sender, "cannot send to me");
             require(params[i].encryptedContentKey.length > 0, "encryptedContentKey empty");
+            require(publicKeys[params[i].receiver].length > 0, "publicKey empty");
         }
 
         {
