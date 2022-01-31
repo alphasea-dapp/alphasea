@@ -67,7 +67,7 @@ describe("publishPredictionKey", function () {
     })
 
     it("too late", async function () {
-        await ethers.provider.send("evm_setNextBlockTimestamp", [this.publicationStartAt + 15 * 60])
+        await ethers.provider.send("evm_setNextBlockTimestamp", [this.publicationStartAt + 30 * 60])
 
         await expect(this.alphasea.publishPredictionKey(
             'crypto_daily',

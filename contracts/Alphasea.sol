@@ -49,8 +49,8 @@ contract Alphasea {
         string description);
     event ModelCreated(string modelId, address owner, string tournamentId, string predictionLicense);
     event PredictionCreated(string modelId, uint executionStartAt, bytes encryptedContent);
-    event PredictionKeyPublished(address sender, string tournamentId, uint executionStartAt, bytes32 contentKey);
-    event PredictionKeySent(address sender, string tournamentId, uint executionStartAt, address receiver, bytes encryptedContentKey);
+    event PredictionKeyPublished(address owner, string tournamentId, uint executionStartAt, bytes32 contentKey);
+    event PredictionKeySent(address owner, string tournamentId, uint executionStartAt, address receiver, bytes encryptedContentKey);
 
     mapping(string => Tournament) public tournaments; // key: tournamentId
     mapping(string => Model) public models; // key: modelId

@@ -32,7 +32,7 @@ describe("getters", function () {
             expect(result.sendingTime).to.equal(16 * 60)
             expect(result.executionPreparationTime).to.equal(6 * 60)
             expect(result.executionTime).to.equal(60 * 60)
-            expect(result.publicationTime).to.equal(15 * 60)
+            expect(result.publicationTime).to.equal(30 * 60)
             expect(result.description).to.equal('description1')
         });
     })

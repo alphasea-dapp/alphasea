@@ -9,7 +9,7 @@ const defaultTournaments = [
         'sendingTime': 16 * 60,
         'executionPreparationTime': 6 * 60,
         'executionTime': 60 * 60,
-        'publicationTime': 15 * 60,
+        'publicationTime': 30 * 60,
         'description': 'description1',
     }
 ]
