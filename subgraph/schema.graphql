@@ -3,8 +3,7 @@ type Tournament @entity {
   id: ID!
   executionStartAt: BigInt!
   predictionTime: BigInt!
-  purchaseTime: BigInt!
-  shippingTime: BigInt!
+  sendingTime: BigInt!
   executionPreparationTime: BigInt!
   executionTime: BigInt!
   publicationTime: BigInt!
@@ -22,38 +21,20 @@ type Model @entity {
   predictions: [Prediction!]! @derivedFrom(field: "model")
 
   # computed
-  totalEarnings: BigInt!
   predictionCount: BigInt!
-  publishedPredictionCount: BigInt!
-  purchaseCount: BigInt!
-  shippedPurchaseCount: BigInt!
-  refundedPurchaseCount: BigInt!
 }
 
 type Prediction @entity {
   id: ID!
+  predictionKeyPublication: PredictionKeyPublication
   model: Model!
   executionStartAt: BigInt!
-  price: BigInt!
   encryptedContent: Bytes!
-  contentKey: Bytes
   createdAt: BigInt!
-  updatedAt: BigInt!
-  purchases: [Purchase!]! @derivedFrom(field: "prediction")
-
-  # computed
-  purchaseCount: BigInt!
-  shippedPurchaseCount: BigInt!
-  refundedPurchaseCount: BigInt!
 }
 
-type Purchase @entity {
+type PredictionKeyPublication @entity {
   id: ID!
-  purchaser: Bytes!
-  publicKey: Bytes!
-  prediction: Prediction!
-  encryptedContentKey: Bytes
-  refunded: Boolean!
+  contentKey: Bytes!
   createdAt: BigInt!
-  updatedAt: BigInt!
 }
