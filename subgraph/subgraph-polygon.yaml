@@ -6,9 +6,9 @@ dataSources:
     name: Alphasea
     network: matic
     source:
-      address: "0x9fD5e48d7Fb0c4a08d387EF87B17fe5861DB0506"
+      address: "0x2499Ab13E231a6862ccbB2279aF9526481ad4bAc"
       abi: Alphasea
-      startBlock: 24114285
+      startBlock: 24638179
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
@@ -22,17 +22,15 @@ dataSources:
         - name: Alphasea
           file: ../artifacts/contracts/Alphasea.sol/Alphasea.json
       eventHandlers:
-        - event: TournamentCreated(string,uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)
+        - event: TournamentCreated(string,uint256,uint256,uint256,uint256,uint256,uint256,string)
           handler: handleTournamentCreated
         - event: ModelCreated(string,address,string,string)
           handler: handleModelCreated
-        - event: PredictionCreated(string,uint256,uint256,bytes)
+        - event: PredictionCreated(string,uint256,bytes)
           handler: handlePredictionCreated
-        - event: PredictionPublished(string,uint256,bytes32)
-          handler: handlePredictionPublished
-        - event: PurchaseCreated(string,uint256,address,bytes)
-          handler: handlePurchaseCreated
-        - event: PurchaseShipped(string,uint256,address,bytes)
-          handler: handlePurchaseShipped
+        - event: PredictionKeyPublished(address,string,uint256,bytes32)
+          handler: handlePredictionKeyPublished
+        - event: PredictionKeySent(address,string,uint256,address,bytes)
+          handler: handlePredictionKeySent
       file: ./src/mapping.ts
 
