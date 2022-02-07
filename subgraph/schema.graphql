@@ -26,15 +26,17 @@ type Model @entity {
 
 type Prediction @entity {
   id: ID!
-  predictionKeyPublication: PredictionKeyPublication
+  predictionKey: PredictionKey
   model: Model!
   executionStartAt: BigInt!
   encryptedContent: Bytes!
   createdAt: BigInt!
 }
 
-type PredictionKeyPublication @entity {
+type PredictionKey @entity {
   id: ID!
-  contentKey: Bytes!
+  contentKey: Bytes
+  sentCount: BigInt!
   createdAt: BigInt!
+  updatedAt: BigInt!
 }

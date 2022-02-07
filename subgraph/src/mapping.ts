@@ -6,9 +6,10 @@ import {
   ModelCreated,
   PredictionCreated,
   PredictionKeyPublished,
+  PredictionKeySent,
 } from "../generated/Alphasea/Alphasea"
 
-import { Tournament, Model, Prediction, PredictionKeyPublication } from "../generated/schema"
+import { Tournament, Model, Prediction, PredictionKey } from "../generated/schema"
 
 export function handleTournamentCreated(event: TournamentCreated): void {
   const params = event.params;
@@ -58,7 +59,14 @@ export function handlePredictionCreated(event: PredictionCreated): void {
     modelEntity.predictionCount += BigInt.fromI32(1);
     modelEntity.save();
 
-    entity.predictionKeyPublication = modelEntity.owner.toHex() + ':' + modelEntity.tournament + ':' + params.executionStartAt.toString()
+    const predictionKeyId = modelEntity.owner.toHex() + ':' + modelEntity.tournament + ':' + params.executionStartAt.toString()
+    const predictionKeyEntity = new PredictionKey(predictionKeyId);
+    predictionKeyEntity.sentCount = BigInt.fromI32(0);
+    predictionKeyEntity.createdAt = event.block.timestamp;
+    predictionKeyEntity.updatedAt = event.block.timestamp;
+    predictionKeyEntity.save();
+
+    entity.predictionKey = predictionKeyId;
   }
 
   entity.save()
@@ -67,11 +75,20 @@ export function handlePredictionCreated(event: PredictionCreated): void {
 export function handlePredictionKeyPublished(event: PredictionKeyPublished): void {
   const params = event.params;
   const id = params.owner.toHex() + ':' + params.tournamentId + ':' + params.executionStartAt.toString()
-  let entity = PredictionKeyPublication.load(id);
-  if (entity) return
+  let entity = PredictionKey.load(id);
+  if (!entity) return
 
-  entity = new PredictionKeyPublication(id);
   entity.contentKey = params.contentKey
-  entity.createdAt = event.block.timestamp
+  entity.save()
+}
+
+export function handlePredictionKeySent(event: PredictionKeySent): void {
+  const params = event.params;
+  const id = params.owner.toHex() + ':' + params.tournamentId + ':' + params.executionStartAt.toString()
+  let entity = PredictionKey.load(id);
+  if (!entity) return
+
+  entity.sentCount += BigInt.fromI32(1);
+  entity.updatedAt = event.block.timestamp;
   entity.save()
 }

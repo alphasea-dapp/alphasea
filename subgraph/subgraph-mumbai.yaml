@@ -30,5 +30,7 @@ dataSources:
           handler: handlePredictionCreated
         - event: PredictionKeyPublished(address,string,uint256,bytes32)
           handler: handlePredictionKeyPublished
+        - event: PredictionKeySent(address,string,uint256,address,bytes)
+          handler: handlePredictionKeySent
       file: ./src/mapping.ts
 
